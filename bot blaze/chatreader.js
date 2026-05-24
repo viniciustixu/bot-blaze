@@ -2,6 +2,9 @@ const { chromium } = require('playwright');
 const crypto = require('crypto');
 
 const mensagens = [];
+const mensagensLidas = new Set();
+
+// momento que o bot iniciou +10 segundos
 const inicio = Date.now() + 10000;
 
 async function startChatReader() {
@@ -16,83 +19,100 @@ async function startChatReader() {
     'https://blaze.stream/nami88'
   );
 
-
   await page.waitForSelector(
     '[data-testid="virtuoso-item-list"] > div'
   );
 
-  const data = await page.$$eval(
-    '[data-testid="virtuoso-item-list"] > div',
-    elementos => {
+  console.log('Chat iniciado...\n');
 
-      return elementos.map(el => {
+  setInterval(async () => {
 
-        const usuarioEl =
-          el.querySelector(
-            'button[title="User actions"]'
-          );
+    const data = await page.$$eval(
+      '[data-testid="virtuoso-item-list"] > div',
+      elementos => {
 
-        const mensagemEl =
-          el.querySelector(
-            'span.text-text.pl-1.font-normal'
-          );
+        return elementos.map(el => {
 
-        const subscriber =
-          !!el.querySelector(
-            'button.text-green-400'
-          );
+          const index =
+            el.getAttribute('data-index');
 
-        if (!usuarioEl || !mensagemEl)
-          return null;
+          const usuarioEl =
+            el.querySelector(
+              'button[title="User actions"]'
+            );
 
-        return {
+          const mensagemEl =
+            el.querySelector(
+              'span.text-text.pl-1.font-normal'
+            );
 
-          usuario:
-            usuarioEl.innerText
-              .replace(':', '')
-              .trim(),
+          const subscriber =
+            !!el.querySelector(
+              'button.text-green-400'
+            );
 
-          mensagem:
-            mensagemEl.innerText
-              .trim(),
+          if (!usuarioEl || !mensagemEl)
+            return null;
 
-          subscriber
-        };
+          return {
 
-      }).filter(Boolean);
+            index,
 
+            usuario:
+              usuarioEl.innerText
+                .replace(':', '')
+                .trim(),
+
+            mensagem:
+              mensagemEl.innerText
+                .trim(),
+
+            subscriber
+          };
+
+        }).filter(Boolean);
+
+      }
+    );
+
+    for (const item of data) {
+
+      // anti duplicata
+      if (mensagensLidas.has(item.index))
+        continue;
+
+      mensagensLidas.add(item.index);
+
+      // timestamp próprio da mensagem
+      const timestamp = Date.now();
+
+      // ignora mensagens antigas
+      if (timestamp < inicio)
+        continue;
+
+      const mensagem = {
+
+        uuid:
+          crypto.randomUUID(),
+
+        timestamp,
+
+        usuario:
+          item.usuario,
+
+        mensagem:
+          item.mensagem,
+
+        subscriber:
+          item.subscriber
+      };
+
+      mensagens.push(mensagem);
+
+      console.log(mensagem);
     }
-  );
 
-  for (const item of data) {
-
-    const agora = Date.now();
-
-    if (agora < inicio)
-      continue;
-
-    mensagens.push({
-
-      uuid:
-        crypto.randomUUID(),
-
-      timestamp:
-        new Date().toISOString(),
-
-      usuario:
-        item.usuario,
-
-      mensagem:
-        item.mensagem,
-
-      subscriber:
-        item.subscriber
-    });
-  }
-
-  console.log(mensagens);
-
-  await browser.close();
+  }, 1000);
 }
 
 module.exports = {
