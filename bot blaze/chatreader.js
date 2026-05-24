@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const crypto = require('crypto');
+const comandos = require('./commands.json');
 
 const mensagens = [];
 const mensagensLidas = new Set();
@@ -81,7 +82,7 @@ async function startChatReader() {
       if (mensagensLidas.has(item.index))
         continue;
 
-      mensagensLidas.add(item.index);
+
 
       // timestamp próprio da mensagem
       const timestamp = Date.now();
@@ -106,6 +107,14 @@ async function startChatReader() {
         subscriber:
           item.subscriber
       };
+
+      const comando =
+        comandos[item.mensagem.toLowerCase()];
+
+      if (!comando)
+        continue;
+
+      mensagensLidas.add(item.index);
 
       mensagens.push(mensagem);
 
