@@ -1,26 +1,20 @@
 const { chromium } = require('playwright');
+const crypto = require('crypto');
+
+const mensagens = [];
+const inicio = Date.now() + 10000;
 
 async function startChatReader() {
-
-
 
   const browser = await chromium.launch({
     headless: false
   });
+
   const page = await browser.newPage();
+
   await page.goto(
-    'https://blaze.stream/justinotv25'
+    'https://blaze.stream/nami88'
   );
-
-  // ATIVA TIMESTAMP
-  await page.getByRole('button', { name: 'Chat settings' }).click();
-  await page.locator(
-    'div.hover\\:bg-border',
-    { hasText: 'Show Timestamp' }
-  ).getByRole(
-    'switch'
-  ).click();
-
 
 
   await page.waitForSelector(
@@ -33,9 +27,6 @@ async function startChatReader() {
 
       return elementos.map(el => {
 
-        const index =
-          el.getAttribute('data-index');
-
         const usuarioEl =
           el.querySelector(
             'button[title="User actions"]'
@@ -44,11 +35,6 @@ async function startChatReader() {
         const mensagemEl =
           el.querySelector(
             'span.text-text.pl-1.font-normal'
-          );
-
-        const timestampEl =
-          el.querySelector(
-            'span.timestamp'
           );
 
         const subscriber =
@@ -61,8 +47,6 @@ async function startChatReader() {
 
         return {
 
-          index,
-
           usuario:
             usuarioEl.innerText
               .replace(':', '')
@@ -72,11 +56,6 @@ async function startChatReader() {
             mensagemEl.innerText
               .trim(),
 
-          timestamp:
-            timestampEl
-              ? timestampEl.innerText.trim()
-              : null,
-
           subscriber
         };
 
@@ -85,9 +64,38 @@ async function startChatReader() {
     }
   );
 
-  console.log(data);
+  for (const item of data) {
+
+    const agora = Date.now();
+
+    if (agora < inicio)
+      continue;
+
+    mensagens.push({
+
+      uuid:
+        crypto.randomUUID(),
+
+      timestamp:
+        new Date().toISOString(),
+
+      usuario:
+        item.usuario,
+
+      mensagem:
+        item.mensagem,
+
+      subscriber:
+        item.subscriber
+    });
+  }
+
+  console.log(mensagens);
 
   await browser.close();
 }
 
-module.exports = startChatReader;
+module.exports = {
+  startChatReader,
+  mensagens
+};

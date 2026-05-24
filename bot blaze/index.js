@@ -1,5 +1,6 @@
-const startChatReader =
-  require('./chatreader');
+const {
+  startChatReader
+} = require('./chatreader');
 
 const startExecutor =
   require('./execute');
