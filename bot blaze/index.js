@@ -2,9 +2,9 @@ const {
   startChatReader
 } = require('./chatreader');
 
-const startExecutor =
+const { executarFila } =
   require('./execute');
 
 startChatReader();
 
-startExecutor();
+executarFila();

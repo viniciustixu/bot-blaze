@@ -1,65 +1,84 @@
+const { mensagens, processarFila } = require('./queue');
+const comandos = require('./commands.json');
+
 const {
   keyboard,
   Key
 } = require('@nut-tree-fork/nut-js');
 
-const comandos = require('./commands.json');
-const fila = require('./queue');
+let delayEntreComandos = 3000;
 
-const agora = new Date();
 
-const horario =
-  agora.toLocaleTimeString(
-    'pt-BR',
-    {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+
+async function executarFila() {
+
+  while (true) {
+
+
+    if (mensagens.length === 0) {
+
+      await delay(100);
+      continue;
     }
-  );
+
+    const item = processarFila();
+
+
+    if (!item)
+      continue;
+
+
+    const comando =
+      comandos[
+      item.mensagem.toLowerCase()
+      ];
+
+    if (!comando)
+      continue;
+
+    const tecla =
+      Key[comando.tecla];
+
+    if (!tecla) {
+      console.log(
+        `Tecla inválida: ${comando.tecla}`
+      );
+      continue;
+    }
+
+    console.log(
+      `[EXECUTANDO] ${item.usuario} -> ${item.mensagem}`
+    );
+
+
+    await keyboard.pressKey(tecla);
+    await delay(comando.delay);
+    await keyboard.releaseKey(tecla);
 
 
 
-function esperar(ms) {
+    const index = mensagens.findIndex(
+      msg => msg.uuid === item.uuid
+    );
+
+    if (index !== -1) {
+      mensagens.splice(index, 1);
+    }
+
+    await delay(delayEntreComandos);
+
+    console.log("mensagens: ", mensagens.length);
+  }
+}
+
+function delay(ms) {
+
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
 }
 
-async function startExecutor() {
-
-  while (true) {
-
-    if (fila.length === 0) {
-
-      await esperar(50);
-
-      continue;
-    }
-
-    const item = fila.shift();
-
-    const comando =
-      comandos[item.mensagem.toLowerCase()];
-
-    if (!comando) continue;
-
-    const tecla = Key[comando.tecla];
-
-    if (!tecla) continue;
-
-    console.log(
-      `[${horario}] ${item.usuario}: ${item.mensagem}`
-    );
-
-    await keyboard.pressKey(tecla);
-
-    await esperar(100);
-
-    await keyboard.releaseKey(tecla);
-
-    await esperar(comando.delay);
-  }
-}
-
-module.exports = startExecutor;
+module.exports = {
+  executarFila,
+  delayEntreComandos
+};

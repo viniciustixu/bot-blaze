@@ -4,14 +4,14 @@ const comandos = require('./commands.json');
 
 const mensagens = [];
 const mensagensLidas = new Set();
-
-// momento que o bot iniciou +10 segundos
 const inicio = Date.now() + 10000;
+
+
 
 async function startChatReader() {
 
   const browser = await chromium.launch({
-    headless: false
+    headless: true
   });
 
   const page = await browser.newPage();
@@ -76,20 +76,20 @@ async function startChatReader() {
       }
     );
 
+    const aquecendo = Date.now() < inicio;
+
     for (const item of data) {
 
-      // anti duplicata
       if (mensagensLidas.has(item.index))
         continue;
 
+      if (aquecendo) {
 
-
-      // timestamp próprio da mensagem
-      const timestamp = Date.now();
-
-      // ignora mensagens antigas
-      if (timestamp < inicio)
+        mensagensLidas.add(item.index);
         continue;
+      }
+
+      const timestamp = Date.now();
 
       const mensagem = {
 
