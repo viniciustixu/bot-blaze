@@ -1,17 +1,45 @@
 {
+  "description": "Bot Blaze estilo Twitch play pokémon",
+  "author": "Viniciustixu",
   "name": "bot-blaze",
+  "private": true,
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "@types/node": "^25.9.1"
+  "main": "public/electron.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "dist": "vite build && electron-builder"
   },
   "dependencies": {
-    "@nut-tree-fork/nut-js": "^4.2.6"
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "playwright": "^1.60.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "build": {
+    "appId": "com.botblaze.app",
+    "win": {
+      "target": "nsis",
+      "asarUnpack": [
+        "**/node_modules/playwright/**/*"
+      ],
+      "files": [
+        "dist/**/*",
+        "public/**/*",
+        "*.js",
+        "commands.json",
+        "node_modules/**/*"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1",
+    "vite": "^8.0.12"
   }
 }
