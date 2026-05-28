@@ -3,8 +3,16 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld(
   'electronAPI',
   {
-    iniciarBot: () => {
-      ipcRenderer.send('iniciar-bot');
+    iniciarPausarBot: () => {
+      return ipcRenderer.invoke('bot-toggle');
+    },
+
+    botRodando: () => {
+      return ipcRenderer.invoke('bot-status');
+    },
+
+    botAquecendo: () => {
+      return ipcRenderer.invoke('bot-aquecendo');
     }
   }
 );

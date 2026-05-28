@@ -4,17 +4,25 @@ const comandos = require('./commands.json');
 
 const mensagens = [];
 const mensagensLidas = new Set();
-const inicio = Date.now() + 10000;
+let inicio = 0;
 
+let browser = null;
+let page = null;
+let interval = null;
 
 
 async function startChatReader() {
 
-  const browser = await chromium.launch({
+  if (browser)
+    return;
+
+  inicio = Date.now() + 10000;
+
+  browser = await chromium.launch({
     headless: true
   });
 
-  const page = await browser.newPage();
+  page = await browser.newPage();
 
   await page.goto(
     'https://blaze.stream/nami88'
@@ -26,105 +34,147 @@ async function startChatReader() {
 
   console.log('Chat iniciado...\n');
 
-  setInterval(async () => {
 
-    const data = await page.$$eval(
-      '[data-testid="virtuoso-item-list"] > div',
-      elementos => {
+  interval = setInterval(async () => {
 
-        return elementos.map(el => {
+    try {
 
-          const index =
-            el.getAttribute('data-index');
+      const data = await page.$$eval(
+        '[data-testid="virtuoso-item-list"] > div',
+        elementos => {
 
-          const usuarioEl =
-            el.querySelector(
-              'button[title="User actions"]'
-            );
+          return elementos.map(el => {
 
-          const mensagemEl =
-            el.querySelector(
-              'span.text-text.pl-1.font-normal'
-            );
+            const index =
+              el.getAttribute('data-index');
 
-          const subscriber =
-            !!el.querySelector(
-              'button.text-green-400'
-            );
+            const usuarioEl =
+              el.querySelector(
+                'button[title="User actions"]'
+              );
 
-          if (!usuarioEl || !mensagemEl)
-            return null;
+            const mensagemEl =
+              el.querySelector(
+                'span.text-text.pl-1.font-normal'
+              );
 
-          return {
+            const subscriber =
+              !!el.querySelector(
+                'button.text-green-400'
+              );
 
-            index,
+            if (!usuarioEl || !mensagemEl)
+              return null;
 
-            usuario:
-              usuarioEl.innerText
-                .replace(':', '')
-                .trim(),
+            return {
 
-            mensagem:
-              mensagemEl.innerText
-                .trim(),
+              index,
 
-            subscriber
-          };
+              usuario:
+                usuarioEl.innerText
+                  .replace(':', '')
+                  .trim(),
 
-        }).filter(Boolean);
+              mensagem:
+                mensagemEl.innerText
+                  .trim(),
 
-      }
-    );
+              subscriber
+            };
 
-    const aquecendo = Date.now() < inicio;
+          }).filter(Boolean);
 
-    for (const item of data) {
+        }
+      );
 
-      if (mensagensLidas.has(item.index))
-        continue;
+      const aquecendo = Date.now() < inicio;
 
-      if (aquecendo) {
+      for (const item of data) {
+
+        if (mensagensLidas.has(item.index))
+          continue;
+
+        if (aquecendo) {
+
+          mensagensLidas.add(item.index);
+          continue;
+        }
+
+
+        const timestamp = Date.now();
+
+        const mensagem = {
+
+          uuid:
+            crypto.randomUUID(),
+
+          timestamp,
+
+          usuario:
+            item.usuario,
+
+          mensagem:
+            item.mensagem,
+
+          subscriber:
+            item.subscriber
+        };
+
+        const comando =
+          comandos[item.mensagem.toLowerCase()];
+
+        if (!comando)
+          continue;
 
         mensagensLidas.add(item.index);
-        continue;
+
+        mensagens.push(mensagem);
+
+        console.log(mensagem);
       }
+    } catch (err) {
 
-      const timestamp = Date.now();
+      console.log(
+        'Erro no chat reader:',
+        err
+      );
 
-      const mensagem = {
-
-        uuid:
-          crypto.randomUUID(),
-
-        timestamp,
-
-        usuario:
-          item.usuario,
-
-        mensagem:
-          item.mensagem,
-
-        subscriber:
-          item.subscriber
-      };
-
-      const comando =
-        comandos[item.mensagem.toLowerCase()];
-
-      if (!comando)
-        continue;
-
-      mensagensLidas.add(item.index);
-
-      mensagens.push(mensagem);
-
-      console.log(mensagem);
     }
-
   }, 1000);
+}
+
+
+
+async function stopChatReader() {
+
+  if (interval) {
+
+    clearInterval(interval);
+    interval = null;
+  }
+
+  if (page) {
+
+    await page.close();
+    page = null;
+  }
+
+  if (browser) {
+
+    await browser.close();
+    browser = null;
+  }
+
+  console.log('Chat finalizado');
+}
+
+function emAquecimento() {
+  return Date.now() < inicio;
 }
 
 module.exports = {
   startChatReader,
+  stopChatReader,
+  emAquecimento,
   mensagens
 };

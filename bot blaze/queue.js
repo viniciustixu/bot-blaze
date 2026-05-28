@@ -2,7 +2,7 @@ const { mensagens } = require('./chatreader');
 
 
 
-let modo = 'anarquia'; // default, democracia, anarquia
+let modo = 'sequencial'; // sequencial, democracia, anarquia
 let subscriberOnly = false;
 
 
@@ -40,7 +40,7 @@ function processarFila() {
 
   switch (modo) {
 
-    case 'default':
+    case 'sequencial':
 
       return mensagens[0];
 

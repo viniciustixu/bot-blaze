@@ -1,9 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
-const { startChatReader } = require('../chatreader');
-const { executarFila } = require('../execute');
+const { start, stop, isRunning, getStatus, emAquecimento } = require('../execute');
 
-let botIniciado = false;
+
 
 const createWindow = () => {
 
@@ -46,24 +45,35 @@ app.whenReady().then(() => {
 
   createWindow();
 
-  ipcMain.on(
-    'iniciar-bot',
-    async () => {
 
-      if (botIniciado)
-        return;
+  ipcMain.handle('bot-toggle', async () => {
 
-      botIniciado = true;
+    const status = getStatus();
 
-      console.log(
-        'Iniciando bot...'
-      );
+    if (status === 'running') {
 
-      startChatReader();
+      await stop();
 
-      executarFila();
+      console.log('Bot OFF');
+
+      return;
     }
-  );
+
+    if (status === 'off') {
+
+      await start();
+
+      console.log('Bot ON');
+    }
+  });
+
+  ipcMain.handle('bot-status', () => {
+    return getStatus();
+  });
+
+  ipcMain.handle('bot-aquecendo', () => {
+    return emAquecimento();
+  });
 
   app.on('activate', () => {
 

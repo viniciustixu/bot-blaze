@@ -1,19 +1,47 @@
-const { mensagens, processarFila } = require('./queue');
+const { processarFila } = require('./queue');
 const comandos = require('./commands.json');
-
-const {
-  keyboard,
-  Key
-} = require('@nut-tree-fork/nut-js');
+const { keyboard, Key } = require('@nut-tree-fork/nut-js');
+const { mensagens, startChatReader, stopChatReader, emAquecimento } = require('./chatreader');
 
 let delayEntreComandos = 3000;
+let status = 'off';
+
+
+
+async function start() {
+
+  if (status !== 'off')
+    return;
+
+  status = 'starting';
+
+  mensagens.length = 0;
+
+  await startChatReader();
+
+  status = 'running';
+
+  executarFila();
+}
+
+async function stop() {
+
+  status = 'off';
+
+  mensagens.length = 0;
+
+  await stopChatReader();
+}
+
+function getStatus() {
+  return status;
+}
 
 
 
 async function executarFila() {
 
-  while (true) {
-
+  while (status === 'running') {
 
     if (mensagens.length === 0) {
 
@@ -79,6 +107,9 @@ function delay(ms) {
 }
 
 module.exports = {
-  executarFila,
+  start,
+  stop,
+  emAquecimento,
+  getStatus,
   delayEntreComandos
 };
