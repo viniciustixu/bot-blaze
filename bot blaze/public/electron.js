@@ -11,6 +11,8 @@ const createWindow = () => {
     width: 800,
     height: 600,
 
+    autoHideMenuBar: true,
+
     webPreferences: {
       preload: path.join(
         __dirname,
@@ -54,7 +56,7 @@ app.whenReady().then(() => {
 
       await stop();
 
-      console.log('Bot OFF');
+
 
       return;
     }
@@ -63,7 +65,6 @@ app.whenReady().then(() => {
 
       await start();
 
-      console.log('Bot ON');
     }
   });
 

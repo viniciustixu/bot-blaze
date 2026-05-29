@@ -17,11 +17,25 @@ async function start() {
 
   mensagens.length = 0;
 
-  await startChatReader();
+  try {
 
-  status = 'running';
+    await startChatReader();
 
-  executarFila();
+    status = 'running';
+
+    executarFila();
+
+    console.log('Bot ON');
+
+  } catch (e) {
+
+    console.log(
+      'Erro ao iniciar bot:',
+      e
+    );
+
+    status = 'off';
+  }
 }
 
 async function stop() {
@@ -31,6 +45,8 @@ async function stop() {
   mensagens.length = 0;
 
   await stopChatReader();
+
+  console.log('Bot OFF');
 }
 
 function getStatus() {

@@ -2,6 +2,7 @@ const { chromium } = require('playwright');
 const crypto = require('crypto');
 const comandos = require('./commands.json');
 
+
 const mensagens = [];
 const mensagensLidas = new Set();
 let inicio = 0;
@@ -28,9 +29,31 @@ async function startChatReader() {
     'https://blaze.stream/nami88'
   );
 
-  await page.waitForSelector(
-    '[data-testid="virtuoso-item-list"] > div'
-  );
+  try {
+
+    await page.waitForSelector(
+      '[data-testid="virtuoso-item-list"] > div',
+      {
+        timeout: 10000
+      }
+    );
+
+  }
+  catch (e) {
+
+    console.log(
+      'Nenhuma mensagem encontrada no chat'
+    );
+
+    await browser.close();
+
+    browser = null;
+    page = null;
+
+    throw new Error(
+      'Falha ao iniciar chat reader'
+    );
+  }
 
   console.log('Chat iniciado...\n');
 
