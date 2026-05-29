@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
-const { start, stop, isRunning, getStatus, emAquecimento } = require('../execute');
+const { start, stop, isRunning, getStatus, emAquecimento, getFila } = require('../execute');
 
 
 
@@ -8,10 +8,13 @@ const createWindow = () => {
 
   const win = new BrowserWindow({
 
-    width: 800,
+    width: 1200,
     height: 600,
 
     autoHideMenuBar: true,
+    resizable: false,
+
+    frame: false,
 
     webPreferences: {
       preload: path.join(
@@ -74,6 +77,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('bot-aquecendo', () => {
     return emAquecimento();
+  });
+
+  ipcMain.handle('bot-fila', () => {
+    return getFila();
   });
 
   app.on('activate', () => {

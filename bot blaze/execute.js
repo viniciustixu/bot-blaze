@@ -53,6 +53,9 @@ function getStatus() {
   return status;
 }
 
+function getFila() {
+  return mensagens;
+}
 
 
 async function executarFila() {
@@ -127,5 +130,6 @@ module.exports = {
   stop,
   emAquecimento,
   getStatus,
+  getFila,
   delayEntreComandos
 };
