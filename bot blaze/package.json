@@ -25,6 +25,7 @@
     "appId": "com.botblaze.app",
     "win": {
       "target": "nsis",
+      "icon": "./public/kirbyico.ico",
       "asarUnpack": [
         "**/node_modules/playwright/**/*"
       ],

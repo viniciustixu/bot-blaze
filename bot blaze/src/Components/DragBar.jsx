@@ -1,0 +1,11 @@
+import CloseAppBtn from './CloseAppBtn';
+
+function DragBar() {
+  return (
+    <div className='text-2xl titlebar w-full h-15 text-center text-white flex justify-end items-center'>
+      <CloseAppBtn />
+    </div>
+  );
+}
+
+export default DragBar;

@@ -1,0 +1,31 @@
+import StatusAnimation from './statusAnimation';
+import StatusAnimatioff from './statusAnimatioff';
+
+function StartButton({ status, aquecendo, onClick }) {
+  return (
+    <div className='flex justify-center mt-15'>
+      <button
+        className='btn btn-xl rounded-full w-[140px] disabled:opacity-100 disabled:bg-white text-black z-10'
+        onClick={onClick}
+        disabled={aquecendo}>
+        {aquecendo ? (
+          <span className='loading loading-spinner loading-xs'></span>
+        ) : status === 'off' ? (
+          <div className='flex gap-2 items-center'>
+            <StatusAnimation />
+            <p>Iniciar</p>
+          </div>
+        ) : (
+          <>
+            <div className='flex gap-2 items-center'>
+              <StatusAnimatioff />
+              <p>Parar</p>
+            </div>
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+export default StartButton;

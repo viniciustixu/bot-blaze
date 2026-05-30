@@ -3,10 +3,7 @@
 
 .titlebar {
   position: relative;
-  height: 32px;
-
   -webkit-app-region: drag;
-
   user-select: none;
 }
 
@@ -21,4 +18,8 @@
 
 body {
   background-color: rgba(16, 16, 16);
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
 }

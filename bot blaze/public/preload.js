@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld(
 
     botFila: () => {
       return ipcRenderer.invoke('bot-fila');
+    },
+    fecharApp: () => {
+      ipcRenderer.invoke('fechar-app');
     }
   }
 );

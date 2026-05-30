@@ -10,11 +10,12 @@ const createWindow = () => {
 
     width: 1200,
     height: 600,
+    icon: path.join(__dirname, '../public/kirbyico.ico'),
 
-    autoHideMenuBar: true,
-    resizable: false,
+    autoHideMenuBar: true, // <-
+    resizable: false, // <-
 
-    frame: false,
+    frame: false, // <-
 
     webPreferences: {
       preload: path.join(
@@ -59,8 +60,6 @@ app.whenReady().then(() => {
 
       await stop();
 
-
-
       return;
     }
 
@@ -82,6 +81,11 @@ app.whenReady().then(() => {
   ipcMain.handle('bot-fila', () => {
     return getFila();
   });
+
+  ipcMain.handle('fechar-app', () => {
+    app.quit();
+  });
+
 
   app.on('activate', () => {
 
