@@ -1,6 +1,6 @@
 function CloseAppBtn() {
   return (
-    <button className='btn btn-circle btn-error no-drag mr-4' onClick={() => window.electronAPI.fecharApp()}>
+    <button className='btn btn-circle btn-error no-drag mr-4 z-10' onClick={() => window.electronAPI.fecharApp()}>
       ✕
     </button>
   );

@@ -1,67 +1,19 @@
-import { useEffect, useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Inicio from './pages/Inicio';
+import Config from './pages/Config';
+import Controles from './pages/Controles';
+import Layout from './Components/Layout';
 import './App.css';
-import BackgroundParticles from './Components/BackgroundParticles';
-import StartButton from './Components/StartButton';
-import ChatDisplay from './Components/ChatDisplay';
-import LogoBot from './Components/LogoBot';
-import DragBar from './Components/DragBar';
-import ErrorAlert from './Components/ErrorAlert';
-import TabSelector from './Components/TabSelector';
 
 function App() {
-  const [status, setStatus] = useState('off');
-  const [aquecendo, setAquecendo] = useState(false);
-  const [fila, setFila] = useState([]);
-  const [erro, setErro] = useState('');
-
-  async function atualizarEstado() {
-    const novoStatus = await window.electronAPI.botRodando();
-
-    const novoAquecimento = await window.electronAPI.botAquecendo();
-
-    const novaFila = await window.electronAPI.botFila();
-
-    setStatus(novoStatus);
-    setAquecendo(novoAquecimento);
-    setFila(novaFila);
-  }
-
-  async function iniciarPausarBot() {
-    const resultado = await window.electronAPI.iniciarPausarBot();
-
-    if (resultado?.erro) {
-      setErro(resultado.erro);
-    }
-
-    atualizarEstado();
-  }
-
-  useEffect(() => {
-    atualizarEstado();
-
-    const interval = setInterval(() => {
-      atualizarEstado();
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className='relative h-screen'>
-      <BackgroundParticles />
-      <DragBar />
-      <TabSelector />
-
-      <div className='flex justify-around'>
-        <div className='flex flex-col justify-evenly'>
-          <LogoBot />
-          <StartButton status={status} aquecendo={aquecendo} onClick={iniciarPausarBot} />
-          <ErrorAlert mensagem={erro} setErro={setErro} />
-        </div>
-
-        <ChatDisplay fila={fila} />
-      </div>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path='/' element={<Inicio />} />
+        <Route path='/config' element={<Config />} />
+        <Route path='/controles' element={<Controles />} />
+      </Route>
+    </Routes>
   );
 }
 
