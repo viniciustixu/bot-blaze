@@ -1,7 +1,12 @@
 const { processarFila } = require('./queue');
-const comandos = require('./commands.json');
 const { keyboard, Key } = require('@nut-tree-fork/nut-js');
 const { mensagens, startChatReader, stopChatReader, emAquecimento } = require('./chatreader');
+const fs = require('fs');
+const path = require('path');
+const { app } = require('electron');
+const { loadCommands } = require('./commandsStore');
+
+
 
 let delayEntreComandos = 3000;
 let status = 'off';
@@ -53,6 +58,20 @@ function getFila() {
   return mensagens;
 }
 
+function getComandosPath() {
+  return path.join(app.getPath('userData'), 'commands.json');
+}
+
+function carregarComandos() {
+  const file = getComandosPath();
+
+  if (!fs.existsSync(file)) {
+    return {};
+  }
+
+  return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
 
 async function executarFila() {
 
@@ -71,10 +90,10 @@ async function executarFila() {
       continue;
 
 
+    const comandos = loadCommands();
+
     const comando =
-      comandos[
-      item.mensagem.toLowerCase()
-      ];
+      comandos[item.mensagem.toLowerCase()];
 
     if (!comando)
       continue;
@@ -83,9 +102,16 @@ async function executarFila() {
       Key[comando.tecla];
 
     if (!tecla) {
-      console.log(
-        `Tecla inválida: ${comando.tecla}`
+      console.log(`Tecla inválida: ${comando.tecla}`);
+
+      const index = mensagens.findIndex(
+        msg => msg.uuid === item.uuid
       );
+
+      if (index !== -1) {
+        mensagens.splice(index, 1);
+      }
+
       continue;
     }
 

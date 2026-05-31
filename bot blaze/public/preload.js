@@ -20,6 +20,25 @@ contextBridge.exposeInMainWorld(
     },
     fecharApp: () => {
       ipcRenderer.invoke('fechar-app');
+    },
+    getCommands: () => {
+      return ipcRenderer.invoke('get-commands');
+    },
+    deleteCommand: (comando) => {
+      return ipcRenderer.invoke(
+        'delete-command',
+        comando
+      );
+    },
+    updateCommand: (oldKey, data) => {
+      return ipcRenderer.invoke(
+        'update-command',
+        oldKey,
+        data
+      );
+    },
+    createCommand: (data) => {
+      return ipcRenderer.invoke('create-command', data);
     }
   }
 );

@@ -1,0 +1,104 @@
+import { useEffect, useState } from 'react';
+
+function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
+  const TECLAS = [
+    'Up',
+    'Down',
+    'Left',
+    'Right',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+  ];
+
+  const [local, setLocal] = useState({
+    comando,
+    tecla,
+    delay,
+  });
+
+  useEffect(() => {
+    setLocal({ comando, tecla, delay });
+  }, [comando, tecla, delay]);
+
+  // debounce save
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onUpdate(comando, local);
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [local]);
+
+  return (
+    <div className='card bg-[rgb(24,24,24)] w-44 border border-[rgb(255,20,255)]'>
+      <div className='card-body items-center text-center gap-3'>
+        {/* comando */}
+        <div className='flex gap-2 items-center w-full justify-between'>
+          <p className='text-white text-xs'>Comando: </p>
+          <input
+            className='input input-sm text-center w-full'
+            value={local.comando}
+            onChange={(e) => setLocal({ ...local, comando: e.target.value })}
+          />
+        </div>
+
+        {/* delay */}
+        <div className='flex gap-2 items-center w-full justify-between'>
+          <p className='text-white text-xs'>Delay: </p>
+          <input
+            className='input input-sm text-center w-full'
+            type='number'
+            value={local.delay}
+            onChange={(e) => setLocal({ ...local, delay: Number(e.target.value) })}
+          />
+        </div>
+
+        {/* tecla */}
+        <div className='flex gap-2 items-center w-full justify-between'>
+          <p className='text-white text-xs'>Tecla: </p>
+          <select
+            className='select select-sm text-center'
+            value={local.tecla}
+            onChange={(e) => setLocal({ ...local, tecla: e.target.value })}>
+            {TECLAS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* delete only */}
+        <button className='btn btn-outline btn-error rounded-2xl mt-2' onClick={() => onDelete(comando)}>
+          <span className='material-symbols-outlined'>delete</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default CommandCard;

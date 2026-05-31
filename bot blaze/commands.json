@@ -17,24 +17,5 @@
   "!right": {
     "tecla": "Right",
     "delay": 1000
-  },
-
-  "!a": {
-    "tecla": "Z",
-    "delay": 1000
-  },
-
-  "!b": {
-    "tecla": "X",
-    "delay": 1000
-  },
-
-  "!start": {
-    "tecla": "Enter",
-    "delay": 1000
-  },
-  "!gn": {
-    "tecla": "Space",
-    "delay": 1000
   }
 }

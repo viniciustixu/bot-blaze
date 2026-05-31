@@ -1,6 +1,6 @@
 const { chromium } = require('playwright');
 const crypto = require('crypto');
-const comandos = require('./commands.json');
+const { loadCommands } = require('./commandsStore');
 
 
 const mensagens = [];
@@ -139,9 +139,8 @@ async function startChatReader() {
             item.subscriber
         };
 
-        const comando =
-          comandos[item.mensagem.toLowerCase()];
-
+        const comandos = loadCommands();
+        const comando = comandos[item.mensagem.toLowerCase()];
         if (!comando)
           continue;
 

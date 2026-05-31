@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
 const { start, stop, isRunning, getStatus, emAquecimento, getFila } = require('../execute');
+const fs = require('fs');
+const comandosPadrao = require('../commands.json');
 
 
 
@@ -49,6 +51,8 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
 
+  garantirArquivoComandos();
+
   createWindow();
 
 
@@ -84,6 +88,93 @@ app.whenReady().then(() => {
     app.quit();
   });
 
+  ipcMain.handle('get-commands', () => {
+
+    const caminhoComandos =
+      garantirArquivoComandos();
+
+    return JSON.parse(
+      fs.readFileSync(
+        caminhoComandos,
+        'utf8'
+      )
+    );
+  });
+
+  ipcMain.handle(
+    'delete-command',
+    (event, comando) => {
+
+      const caminho =
+        garantirArquivoComandos();
+
+      const comandos = JSON.parse(
+        fs.readFileSync(caminho, 'utf8')
+      );
+
+      delete comandos[comando];
+
+      fs.writeFileSync(
+        caminho,
+        JSON.stringify(comandos, null, 2)
+      );
+
+      return true;
+    }
+  );
+
+  ipcMain.handle('update-command', (event, oldKey, data) => {
+    const caminho = garantirArquivoComandos();
+
+    const comandos = JSON.parse(
+      fs.readFileSync(caminho, 'utf8')
+    );
+
+    if (oldKey !== data.comando) {
+      delete comandos[oldKey];
+    }
+
+    comandos[data.comando] = {
+      tecla: data.tecla,
+      delay: data.delay
+    };
+
+    fs.writeFileSync(caminho, JSON.stringify(comandos, null, 2));
+
+    return true;
+  });
+
+  ipcMain.handle('create-command', (event, data) => {
+    const caminho = garantirArquivoComandos();
+
+    const comandos = JSON.parse(
+      fs.readFileSync(caminho, 'utf8')
+    );
+
+    const { comando, tecla, delay } = data;
+
+    if (!comando || !tecla || !delay) {
+      return { erro: 'Preencha todos os campos' };
+    }
+
+    // valida duplicado
+    if (comandos[comando]) {
+      return { erro: 'Esse comando já existe' };
+    }
+
+    comandos[comando] = {
+      tecla,
+      delay
+    };
+
+    fs.writeFileSync(
+      caminho,
+      JSON.stringify(comandos, null, 2)
+    );
+
+    return { ok: true };
+  });
+
 
 
   app.on('activate', () => {
@@ -110,3 +201,26 @@ app.on(
     }
   }
 );
+
+function garantirArquivoComandos() {
+  const pastaUsuario = app.getPath('userData');
+
+  const caminhoComandos = path.join(
+    pastaUsuario,
+    'commands.json'
+  );
+
+  if (!fs.existsSync(caminhoComandos)) {
+    fs.writeFileSync(
+      caminhoComandos,
+      JSON.stringify(comandosPadrao, null, 2)
+    );
+
+    console.log(
+      'commands.json criado em:',
+      caminhoComandos
+    );
+  }
+
+  return caminhoComandos;
+}
