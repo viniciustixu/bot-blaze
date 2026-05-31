@@ -9,7 +9,6 @@ let status = 'off';
 
 
 async function start() {
-
   if (status !== 'off')
     return;
 
@@ -18,7 +17,6 @@ async function start() {
   mensagens.length = 0;
 
   try {
-
     await startChatReader();
 
     status = 'running';
@@ -28,13 +26,11 @@ async function start() {
     console.log('Bot ON');
 
   } catch (e) {
-
-    console.log(
-      'Erro ao iniciar bot:',
-      e
-    );
-
     status = 'off';
+
+    return {
+      erro: e.message
+    };
   }
 }
 

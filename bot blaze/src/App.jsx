@@ -5,11 +5,14 @@ import StartButton from './Components/StartButton';
 import ChatDisplay from './Components/ChatDisplay';
 import LogoBot from './Components/LogoBot';
 import DragBar from './Components/DragBar';
+import ErrorAlert from './Components/ErrorAlert';
+import TabSelector from './Components/TabSelector';
 
 function App() {
   const [status, setStatus] = useState('off');
   const [aquecendo, setAquecendo] = useState(false);
   const [fila, setFila] = useState([]);
+  const [erro, setErro] = useState('');
 
   async function atualizarEstado() {
     const novoStatus = await window.electronAPI.botRodando();
@@ -24,7 +27,11 @@ function App() {
   }
 
   async function iniciarPausarBot() {
-    window.electronAPI.iniciarPausarBot();
+    const resultado = await window.electronAPI.iniciarPausarBot();
+
+    if (resultado?.erro) {
+      setErro(resultado.erro);
+    }
 
     atualizarEstado();
   }
@@ -43,11 +50,13 @@ function App() {
     <div className='relative h-screen'>
       <BackgroundParticles />
       <DragBar />
+      <TabSelector />
 
       <div className='flex justify-around'>
         <div className='flex flex-col justify-evenly'>
           <LogoBot />
           <StartButton status={status} aquecendo={aquecendo} onClick={iniciarPausarBot} />
+          <ErrorAlert mensagem={erro} setErro={setErro} />
         </div>
 
         <ChatDisplay fila={fila} />

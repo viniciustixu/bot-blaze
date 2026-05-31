@@ -41,17 +41,13 @@ async function startChatReader() {
   }
   catch (e) {
 
-    console.log(
-      'Nenhuma mensagem encontrada no chat'
-    );
-
     await browser.close();
 
     browser = null;
     page = null;
 
     throw new Error(
-      'Falha ao iniciar chat reader'
+      'Erro: não foi possível detectar o chat'
     );
   }
 

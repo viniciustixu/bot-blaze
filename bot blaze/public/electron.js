@@ -57,15 +57,13 @@ app.whenReady().then(() => {
     const status = getStatus();
 
     if (status === 'running') {
-
       await stop();
 
       return;
     }
 
     if (status === 'off') {
-
-      await start();
+      return await start();
 
     }
   });
@@ -85,6 +83,7 @@ app.whenReady().then(() => {
   ipcMain.handle('fechar-app', () => {
     app.quit();
   });
+
 
 
   app.on('activate', () => {
