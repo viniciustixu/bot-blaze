@@ -3,6 +3,12 @@ const path = require('path');
 const { start, stop, isRunning, getStatus, emAquecimento, getFila } = require('../execute');
 const fs = require('fs');
 const comandosPadrao = require('../commands.json');
+const configPadrao = {
+  url: 'https://blaze.stream/nami88',
+  delayEntreTeclas: 1003,
+  submode: false,
+  modo: 'sequencial'
+};
 
 
 
@@ -52,6 +58,7 @@ const createWindow = () => {
 app.whenReady().then(() => {
 
   garantirArquivoComandos();
+  garantirArquivoConfig();
 
   createWindow();
 
@@ -175,6 +182,38 @@ app.whenReady().then(() => {
     return { ok: true };
   });
 
+  ipcMain.handle('get-config', () => {
+
+    const caminho =
+      garantirArquivoConfig();
+
+    return JSON.parse(
+      fs.readFileSync(
+        caminho,
+        'utf8'
+      )
+    );
+  });
+
+  ipcMain.handle(
+    'save-config',
+    (event, config) => {
+
+      const caminho =
+        garantirArquivoConfig();
+
+      fs.writeFileSync(
+        caminho,
+        JSON.stringify(
+          config,
+          null,
+          2
+        )
+      );
+
+      return true;
+    }
+  );
 
 
   app.on('activate', () => {
@@ -223,4 +262,27 @@ function garantirArquivoComandos() {
   }
 
   return caminhoComandos;
+}
+
+function garantirArquivoConfig() {
+  const pastaUsuario = app.getPath('userData');
+
+  const caminhoConfig = path.join(
+    pastaUsuario,
+    'config.json'
+  );
+
+  if (!fs.existsSync(caminhoConfig)) {
+    fs.writeFileSync(
+      caminhoConfig,
+      JSON.stringify(configPadrao, null, 2)
+    );
+
+    console.log(
+      'config.json criado em:',
+      caminhoConfig
+    );
+  }
+
+  return caminhoConfig;
 }

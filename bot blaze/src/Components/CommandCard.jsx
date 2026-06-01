@@ -32,6 +32,11 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
     'X',
     'Y',
     'Z',
+    'Enter',
+    'Escape',
+    'Tab',
+    'LeftShift',
+    'LeftControl',
   ];
 
   const [local, setLocal] = useState({

@@ -39,6 +39,17 @@ contextBridge.exposeInMainWorld(
     },
     createCommand: (data) => {
       return ipcRenderer.invoke('create-command', data);
+    },
+    getConfig: () => {
+      return ipcRenderer.invoke(
+        'get-config'
+      );
+    },
+    saveConfig: (config) => {
+      return ipcRenderer.invoke(
+        'save-config',
+        config
+      );
     }
   }
 );

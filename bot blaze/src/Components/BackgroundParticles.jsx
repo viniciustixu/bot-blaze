@@ -15,7 +15,7 @@ function BackgroundParticles() {
     });
   }, []);
 
-  return <div id='tsparticles' className='absolute inset-0' />;
+  return <div id='tsparticles' className='absolute inset-0 pointer-events-none -z-10' />;
 }
 
 export default BackgroundParticles;

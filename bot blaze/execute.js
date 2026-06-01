@@ -8,7 +8,7 @@ const { loadCommands } = require('./commandsStore');
 
 
 
-let delayEntreComandos = 3000;
+let delayEntreComandos = 300;
 let status = 'off';
 
 
@@ -75,6 +75,7 @@ function carregarComandos() {
 
 async function executarFila() {
 
+
   while (status === 'running') {
 
     if (mensagens.length === 0) {
@@ -118,11 +119,14 @@ async function executarFila() {
     console.log(
       `[EXECUTANDO] ${item.usuario} -> ${item.mensagem}`
     );
-
+    keyboard.config.autoDelayMs = 50;
 
     await keyboard.pressKey(tecla);
     await delay(comando.delay);
     await keyboard.releaseKey(tecla);
+
+
+    console.log(keyboard.config.autoDelayMs);
 
 
 
