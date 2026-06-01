@@ -5,15 +5,15 @@ const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const { loadCommands } = require('./commandsStore');
+const { carregarConfig } = require('./config');
 
 
-
-let delayEntreComandos = 300;
 let status = 'off';
 
 
 
 async function start() {
+  console.log('executar');
   if (status !== 'off')
     return;
 
@@ -26,9 +26,12 @@ async function start() {
 
     status = 'running';
 
-    executarFila();
+    executarFila().catch(err => {
+      console.error('Erro na fila:', err);
+    });
 
-    console.log('Bot ON');
+    let config2 = carregarConfig();
+    console.log('Bot ON', config2);
 
   } catch (e) {
     status = 'off';
@@ -58,25 +61,12 @@ function getFila() {
   return mensagens;
 }
 
-function getComandosPath() {
-  return path.join(app.getPath('userData'), 'commands.json');
-}
-
-function carregarComandos() {
-  const file = getComandosPath();
-
-  if (!fs.existsSync(file)) {
-    return {};
-  }
-
-  return JSON.parse(fs.readFileSync(file, 'utf8'));
-}
-
 
 async function executarFila() {
 
 
   while (status === 'running') {
+    const config = carregarConfig();
 
     if (mensagens.length === 0) {
 
@@ -126,7 +116,7 @@ async function executarFila() {
     await keyboard.releaseKey(tecla);
 
 
-    console.log(keyboard.config.autoDelayMs);
+
 
 
 
@@ -138,7 +128,7 @@ async function executarFila() {
       mensagens.splice(index, 1);
     }
 
-    await delay(delayEntreComandos);
+    await delay(config.delayEntreTeclas);
 
     console.log("mensagens: ", mensagens.length);
   }
@@ -157,5 +147,4 @@ module.exports = {
   emAquecimento,
   getStatus,
   getFila,
-  delayEntreComandos
 };

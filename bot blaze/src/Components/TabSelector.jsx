@@ -1,8 +1,19 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 
-function TabSelector() {
+function TabSelector({ setErro }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  async function navegar(path) {
+    const status = await window.electronAPI.botRodando();
+
+    if ((path === '/controles' || path === '/config') && (status === 'running' || status === 'starting')) {
+      setErro('Desligue o bot antes de alterar controles ou configurações');
+      return;
+    }
+
+    navigate(path);
+  }
 
   return (
     <div role='tablist' className='tabs tabs-border fixed top-5 left-5 font-bold text-xl z-10'>
@@ -11,7 +22,7 @@ function TabSelector() {
         className={`tab no-drag z-10 ${
           location.pathname === '/' ? 'tab-active text-[rgb(255,20,255)]' : 'text-white hover:text-[rgb(255,20,255)]'
         }`}
-        onClick={() => navigate('/')}>
+        onClick={() => navegar('/')}>
         INICIO
       </a>
 
@@ -22,7 +33,7 @@ function TabSelector() {
             ? 'tab-active text-[rgb(255,20,255)]'
             : 'text-white hover:text-[rgb(255,20,255)]'
         }`}
-        onClick={() => navigate('/controles')}>
+        onClick={() => navegar('/controles')}>
         CONTROLES
       </a>
 
@@ -33,7 +44,7 @@ function TabSelector() {
             ? 'tab-active text-[rgb(255,20,255)]'
             : 'text-white hover:text-[rgb(255,20,255)]'
         }`}
-        onClick={() => navigate('/config')}>
+        onClick={() => navegar('/config')}>
         CONFIGURAÇÕES
       </a>
     </div>

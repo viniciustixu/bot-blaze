@@ -11,7 +11,7 @@ function Layout() {
   return (
     <div className='h-full'>
       <DragBar />
-      <TabSelector />
+      <TabSelector setErro={setErro} />
       <BackgroundParticles />
 
       <Outlet context={{ setErro }} />

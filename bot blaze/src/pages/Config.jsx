@@ -81,8 +81,8 @@ function Config() {
                 modo: e.target.value,
               })
             }>
-            <option value='sequencial'>Sequencial</option>
-            <option value='anarquia'>Anarquia</option>
+            <option value='sequencial'>sequencial</option>
+            <option value='anarquia'>anarquia</option>
           </select>
         </div>
         <button className='btn btn-outline btn-success' onClick={() => window.electronAPI.saveConfig(config)}>

@@ -1,10 +1,13 @@
 const { chromium } = require('playwright');
 const crypto = require('crypto');
 const { loadCommands } = require('./commandsStore');
+const { carregarConfig } = require('./config');
 
 
 const mensagens = [];
 const mensagensLidas = new Set();
+
+
 let inicio = 0;
 
 let browser = null;
@@ -13,6 +16,7 @@ let interval = null;
 
 
 async function startChatReader() {
+  console.log('startChatReader');
 
   if (browser)
     return;
@@ -25,9 +29,11 @@ async function startChatReader() {
 
   page = await browser.newPage();
 
-  await page.goto(
-    'https://blaze.stream/nami88'
-  );
+  const config = carregarConfig();
+
+
+  await page.goto(config.url);
+
 
   try {
 
@@ -146,6 +152,13 @@ async function startChatReader() {
 
         mensagensLidas.add(item.index);
 
+        if (
+          config.submode &&
+          !item.subscriber
+        ) {
+          continue;
+        }
+
         mensagens.push(mensagem);
 
         console.log(mensagem);
@@ -164,6 +177,7 @@ async function startChatReader() {
 
 
 async function stopChatReader() {
+  mensagensLidas.clear();
 
   if (interval) {
 
