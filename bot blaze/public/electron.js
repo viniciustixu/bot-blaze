@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
-const { start, stop, isRunning, getStatus, emAquecimento, getFila } = require('../execute');
+const { start, stop, isRunning, getStatus, emAquecimento, getFila, getComandoExecutando } = require('../execute');
 const fs = require('fs');
 const comandosPadrao = require('../commands.json');
 const configPadrao = {
@@ -222,6 +222,15 @@ app.whenReady().then(() => {
       win.minimize();
     }
   });
+
+  ipcMain.handle('bot-executando', () => {
+    return getComandoExecutando();
+  });
+
+
+
+  // =====================
+
 
 
   app.on('activate', () => {

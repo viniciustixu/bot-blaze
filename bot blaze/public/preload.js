@@ -53,6 +53,9 @@ contextBridge.exposeInMainWorld(
     },
     minimizarApp: () => {
       ipcRenderer.invoke('minimizar-app');
+    },
+    botExecutando: () => {
+      return ipcRenderer.invoke('bot-executando');
     }
   }
 );

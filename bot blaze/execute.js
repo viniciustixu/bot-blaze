@@ -9,6 +9,7 @@ const { carregarConfig } = require('./config');
 
 
 let status = 'off';
+let comandoExecutando = null;
 
 
 
@@ -105,6 +106,7 @@ async function executarFila() {
 
       continue;
     }
+    comandoExecutando = item;
 
     console.log(
       `[EXECUTANDO] ${item.usuario} -> ${item.mensagem}`
@@ -114,11 +116,11 @@ async function executarFila() {
     await keyboard.pressKey(tecla);
     await delay(comando.delay);
     await keyboard.releaseKey(tecla);
+    await delay(config.delayEntreTeclas);
 
 
 
-
-
+    comandoExecutando = null;
 
     const index = mensagens.findIndex(
       msg => msg.uuid === item.uuid
@@ -127,8 +129,6 @@ async function executarFila() {
     if (index !== -1) {
       mensagens.splice(index, 1);
     }
-
-    await delay(config.delayEntreTeclas);
 
     console.log("mensagens: ", mensagens.length);
   }
@@ -141,10 +141,15 @@ function delay(ms) {
   });
 }
 
+function getComandoExecutando() {
+  return comandoExecutando;
+}
+
 module.exports = {
   start,
   stop,
   emAquecimento,
   getStatus,
   getFila,
+  getComandoExecutando
 };
