@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import kirbyBite from '../assets/kirbybite.png';
+import OkAlert from '../Components/OkAlert';
 
 function Config() {
   const [config, setConfig] = useState({
@@ -8,6 +9,8 @@ function Config() {
     submode: false,
     modo: 'sequencial',
   });
+
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -85,9 +88,20 @@ function Config() {
             <option value='anarquia'>anarquia</option>
           </select>
         </div>
-        <button className='btn btn-outline btn-success' onClick={() => window.electronAPI.saveConfig(config)}>
+        <button
+          className='btn btn-outline btn-success'
+          onClick={() => {
+            window.electronAPI.saveConfig(config);
+
+            setShowAlert(true);
+
+            setTimeout(() => {
+              setShowAlert(false);
+            }, 3000);
+          }}>
           Salvar
         </button>
+        {showAlert && <OkAlert />}
       </div>
       <img className='absolute top-35.5 right-175 w-20 z-10' src={kirbyBite} />
     </div>
