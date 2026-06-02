@@ -4,6 +4,7 @@ const path = require('path');
 const { start, stop, getStatus, emAquecimento, getFila, getComandoExecutando } = require('../execute');
 const fs = require('fs');
 const comandosPadrao = require('../commands.json');
+const log = require('electron-log');
 const configPadrao = {
   url: 'https://blaze.stream/nami88',
   delayEntreTeclas: 1003,
@@ -12,9 +13,15 @@ const configPadrao = {
 };
 
 
+
 let splash = null;
 let mainWindow = null;
 
+
+log.info('Updater iniciado');
+log.error('Erro no updater');
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
@@ -311,17 +318,36 @@ async function verificarAtualizacoes() {
       resolve();
     };
 
-    autoUpdater.autoDownload = true;
+    autoUpdater.on('checking-for-update', () => {
+      log.info('Verificando atualização...');
+    });
 
-    autoUpdater.on('update-not-available', done);
-    autoUpdater.on('error', done);
+    setTimeout(() => {
+      log.warn('Timeout updater');
+      done();
+    }, 8000);
+
+    autoUpdater.on('update-available', (info) => {
+      log.info('Update disponível:', info.version);
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      log.info('Nenhuma atualização');
+      done();
+    });
+
+    autoUpdater.on('error', (err) => {
+      log.error('Erro updater:', err);
+      done();
+    });
 
     autoUpdater.on('update-downloaded', () => {
+      log.info('Update baixado');
+      done();
       autoUpdater.quitAndInstall();
     });
 
-
-    setTimeout(done, 10000);
+    autoUpdater.autoDownload = true;
 
     autoUpdater.checkForUpdates();
   });
