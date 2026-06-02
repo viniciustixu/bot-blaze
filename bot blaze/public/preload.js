@@ -50,6 +50,9 @@ contextBridge.exposeInMainWorld(
         'save-config',
         config
       );
+    },
+    minimizarApp: () => {
+      ipcRenderer.invoke('minimizar-app');
     }
   }
 );

@@ -215,6 +215,14 @@ app.whenReady().then(() => {
     }
   );
 
+  ipcMain.handle('minimizar-app', () => {
+    const win = BrowserWindow.getFocusedWindow();
+
+    if (win) {
+      win.minimize();
+    }
+  });
+
 
   app.on('activate', () => {
 
