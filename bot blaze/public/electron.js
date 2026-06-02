@@ -1,6 +1,7 @@
+const { autoUpdater } = require('electron-updater');
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
-const { start, stop, isRunning, getStatus, emAquecimento, getFila, getComandoExecutando } = require('../execute');
+const { start, stop, getStatus, emAquecimento, getFila, getComandoExecutando } = require('../execute');
 const fs = require('fs');
 const comandosPadrao = require('../commands.json');
 const configPadrao = {
@@ -11,239 +12,233 @@ const configPadrao = {
 };
 
 
+let splash = null;
+let mainWindow = null;
+
 
 const createWindow = () => {
-
-  const win = new BrowserWindow({
-
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
     icon: path.join(__dirname, '../public/kirbyico.ico'),
-
-    autoHideMenuBar: true, // <-
-    resizable: false, // <-
-
-    frame: false, // <-
-
+    autoHideMenuBar: true,
+    resizable: false,
+    frame: false,
+    show: false,
     webPreferences: {
-      preload: path.join(
-        __dirname,
-        'preload.js'
-      ),
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
 
-  const isDev =
-    !app.isPackaged;
+  const isDev = !app.isPackaged;
 
   if (isDev) {
-
-    win.loadURL(
-      'http://localhost:5173'
-    );
-
+    mainWindow.loadURL('http://localhost:5173');
   } else {
-
-    win.loadFile(
-      path.join(
-        __dirname,
-        '../dist/index.html'
-      )
-    );
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 };
 
-app.whenReady().then(() => {
-
+app.whenReady().then(async () => {
   garantirArquivoComandos();
   garantirArquivoConfig();
 
+  createSplash();
+
+  await verificarAtualizacoes();
+
   createWindow();
 
-
-  ipcMain.handle('bot-toggle', async () => {
-
-    const status = getStatus();
-
-    if (status === 'running') {
-      await stop();
-
-      return;
+  mainWindow.once('ready-to-show', () => {
+    if (splash && !splash.isDestroyed()) {
+      splash.close();
+      splash = null;
     }
 
-    if (status === 'off') {
-      return await start();
-
-    }
+    mainWindow.show();
   });
+});
 
-  ipcMain.handle('bot-status', () => {
-    return getStatus();
-  });
+ipcMain.handle('bot-toggle', async () => {
+  const status = getStatus();
 
-  ipcMain.handle('bot-aquecendo', () => {
-    return emAquecimento();
-  });
+  if (status === 'running') {
+    await stop();
+    return;
+  }
 
-  ipcMain.handle('bot-fila', () => {
-    return getFila();
-  });
+  if (status === 'off') {
+    return await start();
+  }
+});
 
-  ipcMain.handle('fechar-app', () => {
-    app.quit();
-  });
+ipcMain.handle('bot-status', () => {
+  return getStatus();
+});
 
-  ipcMain.handle('get-commands', () => {
+ipcMain.handle('bot-aquecendo', () => {
+  return emAquecimento();
+});
 
-    const caminhoComandos =
+ipcMain.handle('bot-fila', () => {
+  return getFila();
+});
+
+ipcMain.handle('fechar-app', () => {
+  app.quit();
+});
+
+ipcMain.handle('get-commands', () => {
+
+  const caminhoComandos =
+    garantirArquivoComandos();
+
+  return JSON.parse(
+    fs.readFileSync(
+      caminhoComandos,
+      'utf8'
+    )
+  );
+});
+
+ipcMain.handle(
+  'delete-command',
+  (event, comando) => {
+
+    const caminho =
       garantirArquivoComandos();
 
-    return JSON.parse(
-      fs.readFileSync(
-        caminhoComandos,
-        'utf8'
-      )
-    );
-  });
-
-  ipcMain.handle(
-    'delete-command',
-    (event, comando) => {
-
-      const caminho =
-        garantirArquivoComandos();
-
-      const comandos = JSON.parse(
-        fs.readFileSync(caminho, 'utf8')
-      );
-
-      delete comandos[comando];
-
-      fs.writeFileSync(
-        caminho,
-        JSON.stringify(comandos, null, 2)
-      );
-
-      return true;
-    }
-  );
-
-  ipcMain.handle('update-command', (event, oldKey, data) => {
-    const caminho = garantirArquivoComandos();
-
     const comandos = JSON.parse(
       fs.readFileSync(caminho, 'utf8')
     );
 
-    if (oldKey !== data.comando) {
-      delete comandos[oldKey];
-    }
-
-    comandos[data.comando] = {
-      tecla: data.tecla,
-      delay: data.delay
-    };
-
-    fs.writeFileSync(caminho, JSON.stringify(comandos, null, 2));
-
-    return true;
-  });
-
-  ipcMain.handle('create-command', (event, data) => {
-    const caminho = garantirArquivoComandos();
-
-    const comandos = JSON.parse(
-      fs.readFileSync(caminho, 'utf8')
-    );
-
-    const { comando, tecla, delay } = data;
-
-    if (!comando || !tecla || !delay) {
-      return { erro: 'Preencha todos os campos' };
-    }
-
-    // valida duplicado
-    if (comandos[comando]) {
-      return { erro: 'Esse comando já existe' };
-    }
-
-    comandos[comando] = {
-      tecla,
-      delay
-    };
+    delete comandos[comando];
 
     fs.writeFileSync(
       caminho,
       JSON.stringify(comandos, null, 2)
     );
 
-    return { ok: true };
-  });
+    return true;
+  }
+);
 
-  ipcMain.handle('get-config', () => {
+ipcMain.handle('update-command', (event, oldKey, data) => {
+  const caminho = garantirArquivoComandos();
+
+  const comandos = JSON.parse(
+    fs.readFileSync(caminho, 'utf8')
+  );
+
+  if (oldKey !== data.comando) {
+    delete comandos[oldKey];
+  }
+
+  comandos[data.comando] = {
+    tecla: data.tecla,
+    delay: data.delay
+  };
+
+  fs.writeFileSync(caminho, JSON.stringify(comandos, null, 2));
+
+  return true;
+});
+
+ipcMain.handle('create-command', (event, data) => {
+  const caminho = garantirArquivoComandos();
+
+  const comandos = JSON.parse(
+    fs.readFileSync(caminho, 'utf8')
+  );
+
+  const { comando, tecla, delay } = data;
+
+  if (!comando || !tecla || !delay) {
+    return { erro: 'Preencha todos os campos' };
+  }
+
+  // valida duplicado
+  if (comandos[comando]) {
+    return { erro: 'Esse comando já existe' };
+  }
+
+  comandos[comando] = {
+    tecla,
+    delay
+  };
+
+  fs.writeFileSync(
+    caminho,
+    JSON.stringify(comandos, null, 2)
+  );
+
+  return { ok: true };
+});
+
+ipcMain.handle('get-config', () => {
+
+  const caminho =
+    garantirArquivoConfig();
+
+  return JSON.parse(
+    fs.readFileSync(
+      caminho,
+      'utf8'
+    )
+  );
+});
+
+ipcMain.handle(
+  'save-config',
+  (event, config) => {
 
     const caminho =
       garantirArquivoConfig();
 
-    return JSON.parse(
-      fs.readFileSync(
-        caminho,
-        'utf8'
+    fs.writeFileSync(
+      caminho,
+      JSON.stringify(
+        config,
+        null,
+        2
       )
     );
-  });
 
-  ipcMain.handle(
-    'save-config',
-    (event, config) => {
+    return true;
+  }
+);
 
-      const caminho =
-        garantirArquivoConfig();
+ipcMain.handle('minimizar-app', () => {
+  const win = BrowserWindow.getFocusedWindow();
 
-      fs.writeFileSync(
-        caminho,
-        JSON.stringify(
-          config,
-          null,
-          2
-        )
-      );
-
-      return true;
-    }
-  );
-
-  ipcMain.handle('minimizar-app', () => {
-    const win = BrowserWindow.getFocusedWindow();
-
-    if (win) {
-      win.minimize();
-    }
-  });
-
-  ipcMain.handle('bot-executando', () => {
-    return getComandoExecutando();
-  });
-
-
-
-  // =====================
-
-
-
-  app.on('activate', () => {
-
-    if (
-      BrowserWindow.getAllWindows()
-        .length === 0
-    ) {
-
-      createWindow();
-    }
-  });
+  if (win) {
+    win.minimize();
+  }
 });
+
+ipcMain.handle('bot-executando', () => {
+  return getComandoExecutando();
+});
+
+
+
+// =====================
+
+
+
+app.on('activate', () => {
+
+  if (
+    BrowserWindow.getAllWindows()
+      .length === 0
+  ) {
+
+    createWindow();
+  }
+});
+
 
 app.on(
   'window-all-closed',
@@ -302,4 +297,48 @@ function garantirArquivoConfig() {
   }
 
   return caminhoConfig;
+}
+
+async function verificarAtualizacoes() {
+  if (!app.isPackaged) return;
+
+  return new Promise((resolve) => {
+    let finished = false;
+
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      resolve();
+    };
+
+    autoUpdater.autoDownload = true;
+
+    autoUpdater.on('update-not-available', done);
+    autoUpdater.on('error', done);
+
+    autoUpdater.on('update-downloaded', () => {
+      autoUpdater.quitAndInstall();
+    });
+
+
+    setTimeout(done, 10000);
+
+    autoUpdater.checkForUpdates();
+  });
+}
+
+function createSplash() {
+  splash = new BrowserWindow({
+    width: 400,
+    height: 250,
+    frame: false,
+    resizable: false,
+    transparent: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      contextIsolation: true
+    }
+  });
+
+  splash.loadFile(path.join(__dirname, '../public/splash.html'));
 }

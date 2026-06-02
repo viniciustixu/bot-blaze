@@ -3,7 +3,7 @@
   "author": "Viniciustixu",
   "name": "bot-blaze",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.2",
   "main": "public/electron.js",
   "scripts": {
     "start": "electron .",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
     "@tailwindcss/vite": "^4.3.0",
+    "electron-updater": "^6.8.3",
     "framer-motion": "^12.40.0",
     "playwright": "^1.60.0",
     "react": "^19.2.6",
@@ -25,6 +26,13 @@
   },
   "build": {
     "appId": "com.botblaze.app",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "viniciustixu",
+        "repo": "bot-blaze"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "./public/kirbyico.ico",
