@@ -4,6 +4,7 @@ import TabSelector from './TabSelector';
 import BackgroundParticles from './BackgroundParticles';
 import ErrorAlert from './ErrorAlert';
 import { useState } from 'react';
+import AppVersion from './AppVersion';
 
 function Layout() {
   const [erro, setErro] = useState('');
@@ -16,6 +17,7 @@ function Layout() {
 
       <Outlet context={{ setErro }} />
 
+      <AppVersion />
       <ErrorAlert mensagem={erro} setErro={setErro} />
     </div>
   );

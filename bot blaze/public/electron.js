@@ -4,6 +4,7 @@ const path = require('path');
 const { start, stop, getStatus, emAquecimento, getFila, getComandoExecutando } = require('../execute');
 const fs = require('fs');
 const comandosPadrao = require('../commands.json');
+
 const log = require('electron-log');
 const configPadrao = {
   url: 'https://blaze.stream/nami88',
@@ -229,6 +230,9 @@ ipcMain.handle('bot-executando', () => {
   return getComandoExecutando();
 });
 
+ipcMain.handle('app-version', () => {
+  return app.getVersion();
+});
 
 
 // =====================

@@ -56,6 +56,9 @@ contextBridge.exposeInMainWorld(
     },
     botExecutando: () => {
       return ipcRenderer.invoke('bot-executando');
+    },
+    appVersion: () => {
+      return ipcRenderer.invoke('app-version');
     }
   }
 );
