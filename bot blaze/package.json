@@ -3,7 +3,7 @@
   "author": "Viniciustixu",
   "name": "bot-blaze",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "public/electron.js",
   "scripts": {
     "start": "electron .",
@@ -29,6 +29,12 @@
     "productName": "bot-blaze",
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "appId": "com.botblaze.app",
+    "extraResources": [
+      {
+        "from": "chromium",
+        "to": "chromium"
+      }
+    ],
     "publish": [
       {
         "provider": "github",

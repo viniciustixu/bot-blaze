@@ -1,5 +1,7 @@
+const { app } = require('electron');
 const { chromium } = require('playwright');
 const crypto = require('crypto');
+const path = require('path');
 const { loadCommands } = require('./commandsStore');
 const { carregarConfig } = require('./config');
 
@@ -24,7 +26,15 @@ async function startChatReader() {
   inicio = Date.now() + 10000;
 
   browser = await chromium.launch({
-    headless: true
+    headless: true,
+    executablePath: app.isPackaged
+      ? path.join(
+        process.resourcesPath,
+        'chromium',
+        'chrome-win64',
+        'chrome.exe'
+      )
+      : undefined
   });
 
   page = await browser.newPage();
