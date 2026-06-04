@@ -167,7 +167,6 @@ ipcMain.handle('create-command', (event, data) => {
     return { erro: 'Preencha todos os campos' };
   }
 
-  // valida duplicado
   if (comandos[comando]) {
     return { erro: 'Esse comando já existe' };
   }

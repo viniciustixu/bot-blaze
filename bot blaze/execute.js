@@ -1,5 +1,5 @@
 const { processarFila } = require('./queue');
-const { keyboard, Key } = require('@nut-tree-fork/nut-js');
+const { keyboard, mouse, Button, Key } = require('@nut-tree-fork/nut-js');
 const { mensagens, startChatReader, stopChatReader, emAquecimento } = require('./chatreader');
 const fs = require('fs');
 const path = require('path');
@@ -10,6 +10,11 @@ const { carregarConfig } = require('./config');
 
 let status = 'off';
 let comandoExecutando = null;
+const mouseMap = {
+  'mouse.click(Button.LEFT)': Button.LEFT,
+  'mouse.click(Button.RIGHT)': Button.RIGHT,
+  'mouse.click(Button.MIDDLE)': Button.MIDDLE,
+};
 
 
 
@@ -90,22 +95,6 @@ async function executarFila() {
     if (!comando)
       continue;
 
-    const tecla =
-      Key[comando.tecla];
-
-    if (!tecla) {
-      console.log(`Tecla inválida: ${comando.tecla}`);
-
-      const index = mensagens.findIndex(
-        msg => msg.uuid === item.uuid
-      );
-
-      if (index !== -1) {
-        mensagens.splice(index, 1);
-      }
-
-      continue;
-    }
     comandoExecutando = item;
 
     console.log(
@@ -113,9 +102,37 @@ async function executarFila() {
     );
     keyboard.config.autoDelayMs = 50;
 
-    await keyboard.pressKey(tecla);
-    await delay(comando.delay);
-    await keyboard.releaseKey(tecla);
+    if (comando.tecla in mouseMap) {
+
+      await mouse.click(
+        mouseMap[comando.tecla]
+      );
+
+    } else {
+
+      const tecla =
+        Key[comando.tecla];
+
+      if (!tecla) {
+        console.log(
+          `Tecla inválida: ${comando.tecla}`
+        );
+
+        const index = mensagens.findIndex(
+          msg => msg.uuid === item.uuid
+        );
+
+        if (index !== -1) {
+          mensagens.splice(index, 1);
+        }
+
+        continue;
+      }
+
+      await keyboard.pressKey(tecla);
+      await delay(comando.delay);
+      await keyboard.releaseKey(tecla);
+    }
     await delay(config.delayEntreTeclas);
 
 

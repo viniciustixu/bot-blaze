@@ -11,7 +11,7 @@ function ChatDisplay({ fila, executando }) {
 
   return (
     <div className='chat chat-end mt-10 px-10 bg-[rgb(24,24,24)] rounded-2xl w-[400px] h-[450px] z-10'>
-      <div className='flex flex-col gap-2 mt-5'>
+      <div className='flex flex-col gap-2 mt-5 items-end w-full'>
         <AnimatePresence mode='popLayout'>
           {itensVisiveis.map((item) => {
             const ativo = executando?.uuid === item.uuid;
@@ -24,12 +24,12 @@ function ChatDisplay({ fila, executando }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.25 }}
-                className='flex items-end justify-end mr-5'>
+                className='flex items-end justify-end w-fit'>
                 <div
-                  className={`font-atkinson flex w-fit chat-bubble whitespace-nowrap rounded-2xl rounded-br-none px-10 text-2xl ${
-                    ativo ? 'bg-orange-500 text-white' : ''
+                  className={`flex  font-atkinsonb chat-bubble whitespace-nowrap rounded-2xl rounded-br-none mr-5 text-2xl ${
+                    ativo ? 'bg-orange-500 text-white' : 'bg-white text-black'
                   }`}>
-                  {item.usuario.toUpperCase() + ': ' + item.mensagem.toUpperCase().slice(1)}
+                  {item.usuario.slice(0, 8).toUpperCase() + '➜' + item.mensagem.slice(0, 9).toUpperCase()}
                 </div>
               </motion.div>
             );

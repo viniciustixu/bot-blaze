@@ -59,6 +59,9 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
     'Num7',
     'Num8',
     'Num9',
+    'mouse.click(Button.LEFT)',
+    'mouse.click(Button.RIGHT)',
+    'mouse.click(Button.MIDDLE)',
   ];
 
   const [local, setLocal] = useState({
@@ -87,9 +90,9 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
         <div className='flex gap-2 items-center w-full justify-between'>
           <p className='text-white text-xs'>Comando: </p>
           <input
-            className='input input-sm text-center w-full'
+            className='input input-sm text-center w-full bg-[#1D232A] text-white focus:outline-none border border-[#464E58]'
             value={local.comando}
-            onChange={(e) => setLocal({ ...local, comando: e.target.value })}
+            onChange={(e) => setLocal({ ...local, comando: e.target.value.toLowerCase() })}
           />
         </div>
 
@@ -97,8 +100,9 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
         <div className='flex gap-2 items-center w-full justify-between'>
           <p className='text-white text-xs'>Delay: </p>
           <input
-            className='input input-sm text-center w-full'
+            className='input input-sm text-center w-full bg-[#1D232A] text-white focus:outline-none border border-[#464E58]'
             type='number'
+            min='0'
             value={local.delay}
             onChange={(e) => setLocal({ ...local, delay: Number(e.target.value) })}
           />
@@ -108,7 +112,7 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
         <div className='flex gap-2 items-center w-full justify-between'>
           <p className='text-white text-xs'>Tecla: </p>
           <select
-            className='select select-sm text-center'
+            className='select select-sm text-center bg-[#1D232A] text-white focus:outline-none border border-[#464E58]'
             value={local.tecla}
             onChange={(e) => setLocal({ ...local, tecla: e.target.value })}>
             {TECLAS.map((t) => (

@@ -18,6 +18,8 @@ let interval = null;
 
 
 async function startChatReader() {
+  mensagensLidas.clear();
+
   console.log('startChatReader');
 
   if (browser)

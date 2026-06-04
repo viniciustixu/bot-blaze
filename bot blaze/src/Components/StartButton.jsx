@@ -5,7 +5,7 @@ function StartButton({ status, aquecendo, onClick }) {
   return (
     <div className='flex justify-center mt-15'>
       <button
-        className='btn btn-xl rounded-full w-[140px] disabled:opacity-100 disabled:bg-white text-black z-10'
+        className='btn btn-xl rounded-full w-[140px] disabled:opacity-100 bg-white disabled:bg-white text-black z-10'
         onClick={onClick}
         disabled={aquecendo}>
         {aquecendo ? (

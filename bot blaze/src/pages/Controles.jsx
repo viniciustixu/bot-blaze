@@ -55,7 +55,7 @@ function Controles() {
 
   return (
     <div className='h-screen overflow-y-auto scrollbar-hide pb-18 '>
-      <div className='mb-6 '>
+      <div className='mb-6'>
         <CriarComando criarComando={criarComando} />
       </div>
 

@@ -29,7 +29,7 @@ function Config() {
         <div className='flex gap-2 items-center justify-between'>
           <label className='text-[rgb(255,20,255)]'>URL</label>
           <input
-            className='input text-black w-fit'
+            className='input text-black w-fit bg-white focus:outline-none border border-[#464E58]'
             value={config.url}
             onChange={(e) =>
               setConfig({
@@ -44,8 +44,9 @@ function Config() {
         <div className='flex gap-2 items-center justify-between'>
           <label className='text-[rgb(255,20,255)]'>Delay Entre Teclas</label>
           <input
-            className='input text-black  w-[100px]'
+            className='input text-black w-[100px] bg-white'
             type='number'
+            min='0'
             value={config.delayEntreTeclas}
             onChange={(e) =>
               setConfig({
@@ -60,7 +61,8 @@ function Config() {
         <div className='flex gap-2 text-white justify-between'>
           <label className='text-[rgb(255,20,255)]'>Submode</label>
           <input
-            className='toggle toggle-success toggle-md bg-white'
+            className='toggle toggle-success toggle-md theme-controller'
+            data-theme='light'
             type='checkbox'
             checked={config.submode}
             onChange={(e) =>
@@ -76,7 +78,7 @@ function Config() {
         <div className='flex gap-2 items-center justify-between'>
           <label className='text-[rgb(255,20,255)]'>Modo</label>
           <select
-            className='select text-black rounded-2xl w-[130px]'
+            className='select text-black rounded-2xl w-[130px] bg-white focus:outline-none border border-[#464E58]'
             value={config.modo}
             onChange={(e) =>
               setConfig({
