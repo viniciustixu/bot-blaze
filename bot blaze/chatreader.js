@@ -95,13 +95,37 @@ async function startChatReader() {
                 'span.text-text.pl-1.font-normal'
               );
 
-            const subscriber =
-              !!el.querySelector(
-                'button.text-green-400'
-              );
-
             if (!usuarioEl || !mensagemEl)
               return null;
+
+            let subscriber = false;
+
+            if (
+              usuarioEl.classList.contains(
+                'text-green-400'
+              )
+            ) {
+              subscriber = true;
+            }
+            else if (
+              usuarioEl.classList.contains(
+                'text-red-600'
+              )
+            ) {
+              subscriber = true;
+            }
+            else if (
+              usuarioEl.classList.contains(
+                'text-primary-600'
+              ) ||
+              usuarioEl.className.includes(
+                'ff6600'
+              )
+            ) {
+              subscriber = 'check';
+            }
+
+
 
             return {
 
@@ -135,6 +159,29 @@ async function startChatReader() {
 
           mensagensLidas.add(item.index);
           continue;
+        }
+
+        if (item.subscriber === 'check') {
+
+          try {
+            const row = page.locator(
+              `[data-index="${item.index}"]`
+            );
+
+            await row.locator(
+              'button[title="User actions"]'
+            ).first().click();
+
+            await page.waitForTimeout(150);
+
+            item.subscriber =
+              await page.getByText(
+                'Subscribed for'
+              ).count() > 0;
+          }
+          catch {
+            item.subscriber = false;
+          }
         }
 
 
