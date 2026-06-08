@@ -34,6 +34,7 @@ async function start() {
 
     executarFila().catch(err => {
       console.error('Erro na fila:', err);
+      status = 'off';
     });
 
     let config2 = carregarConfig();
@@ -92,8 +93,17 @@ async function executarFila() {
     const comando =
       comandos[item.mensagem.toLowerCase()];
 
-    if (!comando)
+    if (!comando) {
+      const index = mensagens.findIndex(
+        msg => msg.uuid === item.uuid
+      );
+
+      if (index !== -1) {
+        mensagens.splice(index, 1);
+      }
+
       continue;
+    }
 
     comandoExecutando = item;
 

@@ -10,12 +10,28 @@ function getConfigPath() {
 }
 
 function carregarConfig() {
-  return JSON.parse(
-    fs.readFileSync(
+  try {
+    return JSON.parse(
+      fs.readFileSync(
+        getConfigPath(),
+        'utf8'
+      )
+    );
+  } catch {
+    const padrao = {
+      url: 'https://blaze.stream/nami88',
+      delayEntreTeclas: 1003,
+      submode: false,
+      modo: 'sequencial'
+    };
+
+    fs.writeFileSync(
       getConfigPath(),
-      'utf8'
-    )
-  );
+      JSON.stringify(padrao, null, 2)
+    );
+
+    return padrao;
+  }
 }
 
 module.exports = {

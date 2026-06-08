@@ -19,8 +19,6 @@ let splash = null;
 let mainWindow = null;
 
 
-log.info('Updater iniciado');
-log.error('Erro no updater');
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 

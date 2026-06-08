@@ -1,7 +1,10 @@
-import errorSound from '../assets/pop.mp3';
+import { useEffect } from 'react';
+import popSound from '../assets/pop.mp3';
 
 function OkAlert() {
-  new Audio(errorSound).play();
+  useEffect(() => {
+    new Audio(popSound).play();
+  }, []);
 
   return (
     <div role='alert' className='alert alert-success rounded-2xl fixed bottom-5 left-5'>

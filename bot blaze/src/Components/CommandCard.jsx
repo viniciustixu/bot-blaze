@@ -74,14 +74,9 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
     setLocal({ comando, tecla, delay });
   }, [comando, tecla, delay]);
 
-  // debounce save
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onUpdate(comando, local);
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, [local]);
+  function handleBlur() {
+    onUpdate(comando, local);
+  }
 
   return (
     <div className='card bg-[rgb(24,24,24)] w-44 border border-[rgb(255,20,255)]'>
@@ -93,6 +88,7 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
             className='input input-sm text-center w-full bg-[#1D232A] text-white focus:outline-none border border-[#464E58]'
             value={local.comando}
             onChange={(e) => setLocal({ ...local, comando: e.target.value.toLowerCase() })}
+            onBlur={handleBlur}
           />
         </div>
 
@@ -105,6 +101,7 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
             min='0'
             value={local.delay}
             onChange={(e) => setLocal({ ...local, delay: Number(e.target.value) })}
+            onBlur={handleBlur}
           />
         </div>
 
@@ -114,7 +111,8 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
           <select
             className='select select-sm text-center bg-[#1D232A] text-white focus:outline-none border border-[#464E58]'
             value={local.tecla}
-            onChange={(e) => setLocal({ ...local, tecla: e.target.value })}>
+            onChange={(e) => setLocal({ ...local, tecla: e.target.value })}
+            onBlur={handleBlur}>
             {TECLAS.map((t) => (
               <option key={t} value={t}>
                 {t}

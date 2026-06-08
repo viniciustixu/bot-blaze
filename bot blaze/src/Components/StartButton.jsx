@@ -1,5 +1,5 @@
-import StatusAnimation from './statusAnimation';
-import StatusAnimatioff from './statusAnimatioff';
+import StatusAnimation from './StatusAnimation';
+import StatusAnimatioff from './StatusAnimatioff';
 
 function StartButton({ status, aquecendo, onClick }) {
   return (

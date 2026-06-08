@@ -13,7 +13,11 @@ function loadCommands() {
     return {};
   }
 
-  return JSON.parse(fs.readFileSync(file, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return {};
+  }
 }
 
 module.exports = {
