@@ -55,16 +55,17 @@ function Presets({ onProfileChange }) {
           <div className='flex justify-center items-center text-white gap-1'>
             {profiles.map((name, i) => (
               <div key={name} className='tooltip tooltip-bottom tooltip-purple' data-tip={name}>
-                <button
-                  className='w-12 h-12 no-drag rounded-lg flex flex-col items-center justify-center group'
+                  <button
+                    className='w-12 h-12 no-drag rounded-lg flex flex-col items-center justify-center group cursor-pointer'
                   onClick={() => handleSwitch(name)}>
                   <IconPresets number={i + 1} active={name === active} />
                 </button>
               </div>
             ))}
             {profiles.length < 9 && (
-              <button
-                className='w-12 h-12 no-drag rounded-lg flex items-center justify-center border border-transparent hover:border-green-500 hover:bg-green-500/20 transition-all'
+              <div className='tooltip tooltip-bottom tooltip-green' data-tip='Add'>
+                <button
+                className='w-12 h-12 no-drag rounded-lg flex items-center justify-center border border-transparent hover:border-green-500 hover:bg-green-500/20 transition-all cursor-pointer'
                 onClick={() => setModalOpen(true)}>
                 <svg className='w-8 h-8 text-green-400' viewBox='0 0 24 24' fill='none'>
                   <path
@@ -78,7 +79,8 @@ function Presets({ onProfileChange }) {
                     +
                   </text>
                 </svg>
-              </button>
+                </button>
+              </div>
             )}
           </div>
 

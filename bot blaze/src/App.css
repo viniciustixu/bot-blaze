@@ -49,4 +49,12 @@ body {
 
 .tooltip-purple[data-tip]::before {
   color: rgb(255, 20, 255) !important;
+  border-radius: 1rem !important;
+  border: 1px solid rgb(255, 20, 255) !important;
+}
+
+.tooltip-green[data-tip]::before {
+  color: rgb(34, 197, 94) !important;
+  border-radius: 1rem !important;
+  border: 1px solid rgb(34, 197, 94) !important;
 }

@@ -110,15 +110,20 @@ ipcMain.handle(
 
 ipcMain.handle('update-command', (event, oldKey, data) => {
   garantirArquivoComandos();
-  const active = comandosStore.loadCommands();
-  if (oldKey !== data.comando) {
-    delete active[oldKey];
+  const full = comandosStore.loadFullStructure();
+  const profileName = full.activeProfile;
+  const active = full.profiles[profileName];
+
+  const reordered = {};
+  for (const key of Object.keys(active)) {
+    if (key === oldKey) {
+      reordered[data.comando] = { tecla: data.tecla, delay: data.delay };
+    } else {
+      reordered[key] = active[key];
+    }
   }
-  active[data.comando] = {
-    tecla: data.tecla,
-    delay: data.delay
-  };
-  comandosStore.saveProfile(comandosStore.getActiveProfile(), active);
+
+  comandosStore.saveProfile(profileName, reordered);
   return true;
 });
 
@@ -218,6 +223,7 @@ ipcMain.handle('create-preset', (event, name) => {
     "!right": { tecla: "Right", delay: 1000 }
   };
   comandosStore.saveProfile(name.trim(), defaults);
+  comandosStore.switchProfile(name.trim());
   return { ok: true };
 });
 
