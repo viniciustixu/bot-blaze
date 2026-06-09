@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import CommandCard from '../Components/CommandCard';
 import { useOutletContext } from 'react-router-dom';
 import CriarComando from '../Components/CriarComando';
+import Presets from '../Components/Presets';
 
 function Controles() {
   const [comandos, setComandos] = useState([]);
@@ -55,6 +56,7 @@ function Controles() {
 
   return (
     <div className='h-screen overflow-y-auto scrollbar-hide pb-18 '>
+      <Presets />
       <div className='mb-6'>
         <CriarComando criarComando={criarComando} />
       </div>
