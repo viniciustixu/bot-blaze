@@ -55,6 +55,18 @@ contextBridge.exposeInMainWorld(
     },
     appVersion: () => {
       return ipcRenderer.invoke('app-version');
+    },
+    getPresets: () => {
+      return ipcRenderer.invoke('get-presets');
+    },
+    createPreset: (name) => {
+      return ipcRenderer.invoke('create-preset', name);
+    },
+    deletePreset: (name) => {
+      return ipcRenderer.invoke('delete-preset', name);
+    },
+    switchPreset: (name) => {
+      return ipcRenderer.invoke('switch-preset', name);
     }
   }
 );

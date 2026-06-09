@@ -1,21 +1,23 @@
 {
-  "!up": {
-    "tecla": "Up",
-    "delay": 1000
-  },
-
-  "!down": {
-    "tecla": "Down",
-    "delay": 1000
-  },
-
-  "!left": {
-    "tecla": "Left",
-    "delay": 1000
-  },
-
-  "!right": {
-    "tecla": "Right",
-    "delay": 1000
+  "activeProfile": "default",
+  "profiles": {
+    "default": {
+      "!up": {
+        "tecla": "Up",
+        "delay": 1000
+      },
+      "!down": {
+        "tecla": "Down",
+        "delay": 1000
+      },
+      "!left": {
+        "tecla": "Left",
+        "delay": 1000
+      },
+      "!right": {
+        "tecla": "Right",
+        "delay": 1000
+      }
+    }
   }
 }

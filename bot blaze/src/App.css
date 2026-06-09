@@ -46,3 +46,7 @@ body {
 .font-atkinson {
   font-family: 'Atkinson Hyperlegible Mono', monospace;
 }
+
+.tooltip-purple[data-tip]::before {
+  color: rgb(255, 20, 255) !important;
+}

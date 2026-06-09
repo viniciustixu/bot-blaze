@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
 const { start, stop, getStatus, getFila, getComandoExecutando } = require('../execute');
 const fs = require('fs');
-const comandosPadrao = require('../commands.json');
+const comandosStore = require('../commandsStore');
 
 const log = require('electron-log');
 const configPadrao = {
@@ -93,87 +93,50 @@ ipcMain.handle('fechar-app', () => {
 });
 
 ipcMain.handle('get-commands', () => {
-
-  const caminhoComandos =
-    garantirArquivoComandos();
-
-  return JSON.parse(
-    fs.readFileSync(
-      caminhoComandos,
-      'utf8'
-    )
-  );
+  garantirArquivoComandos();
+  return comandosStore.loadCommands();
 });
 
 ipcMain.handle(
   'delete-command',
   (event, comando) => {
-
-    const caminho =
-      garantirArquivoComandos();
-
-    const comandos = JSON.parse(
-      fs.readFileSync(caminho, 'utf8')
-    );
-
-    delete comandos[comando];
-
-    fs.writeFileSync(
-      caminho,
-      JSON.stringify(comandos, null, 2)
-    );
-
+    garantirArquivoComandos();
+    const active = comandosStore.loadCommands();
+    delete active[comando];
+    comandosStore.saveProfile(comandosStore.getActiveProfile(), active);
     return true;
   }
 );
 
 ipcMain.handle('update-command', (event, oldKey, data) => {
-  const caminho = garantirArquivoComandos();
-
-  const comandos = JSON.parse(
-    fs.readFileSync(caminho, 'utf8')
-  );
-
+  garantirArquivoComandos();
+  const active = comandosStore.loadCommands();
   if (oldKey !== data.comando) {
-    delete comandos[oldKey];
+    delete active[oldKey];
   }
-
-  comandos[data.comando] = {
+  active[data.comando] = {
     tecla: data.tecla,
     delay: data.delay
   };
-
-  fs.writeFileSync(caminho, JSON.stringify(comandos, null, 2));
-
+  comandosStore.saveProfile(comandosStore.getActiveProfile(), active);
   return true;
 });
 
 ipcMain.handle('create-command', (event, data) => {
-  const caminho = garantirArquivoComandos();
-
-  const comandos = JSON.parse(
-    fs.readFileSync(caminho, 'utf8')
-  );
-
+  garantirArquivoComandos();
+  const active = comandosStore.loadCommands();
   const { comando, tecla, delay } = data;
 
   if (!comando || !tecla || !delay) {
     return { erro: 'Preencha todos os campos' };
   }
 
-  if (comandos[comando]) {
+  if (active[comando]) {
     return { erro: 'Esse comando já existe' };
   }
 
-  comandos[comando] = {
-    tecla,
-    delay
-  };
-
-  fs.writeFileSync(
-    caminho,
-    JSON.stringify(comandos, null, 2)
-  );
+  active[comando] = { tecla, delay };
+  comandosStore.saveProfile(comandosStore.getActiveProfile(), active);
 
   return { ok: true };
 });
@@ -227,6 +190,61 @@ ipcMain.handle('app-version', () => {
   return app.getVersion();
 });
 
+ipcMain.handle('get-presets', () => {
+  garantirArquivoComandos();
+  return {
+    profiles: comandosStore.getProfiles(),
+    active: comandosStore.getActiveProfile()
+  };
+});
+
+ipcMain.handle('create-preset', (event, name) => {
+  garantirArquivoComandos();
+  const profiles = comandosStore.getProfiles();
+
+  if (profiles.length >= 9)
+    return { erro: 'Máximo de 9 perfis atingido' };
+
+  if (profiles.includes(name))
+    return { erro: 'Já existe um perfil com esse nome' };
+
+  if (!name || !name.trim())
+    return { erro: 'Nome inválido' };
+
+  const defaults = {
+    "!up": { tecla: "Up", delay: 1000 },
+    "!down": { tecla: "Down", delay: 1000 },
+    "!left": { tecla: "Left", delay: 1000 },
+    "!right": { tecla: "Right", delay: 1000 }
+  };
+  comandosStore.saveProfile(name.trim(), defaults);
+  return { ok: true };
+});
+
+ipcMain.handle('delete-preset', (event, name) => {
+  garantirArquivoComandos();
+  const profiles = comandosStore.getProfiles();
+
+  if (profiles.length <= 1)
+    return { erro: 'Não é possível deletar o único perfil' };
+
+  if (!profiles.includes(name))
+    return { erro: 'Perfil não encontrado' };
+
+  comandosStore.deleteProfile(name);
+  return { ok: true };
+});
+
+ipcMain.handle('switch-preset', (event, name) => {
+  garantirArquivoComandos();
+  const profiles = comandosStore.getProfiles();
+
+  if (!profiles.includes(name))
+    return { erro: 'Perfil não encontrado' };
+
+  comandosStore.switchProfile(name);
+  return { ok: true };
+});
 
 // =====================
 
@@ -266,9 +284,21 @@ function garantirArquivoComandos() {
   );
 
   if (!fs.existsSync(caminhoComandos)) {
+    const padrao = {
+      activeProfile: 'default',
+      profiles: {
+        default: {
+          "!up": { "tecla": "Up", "delay": 1000 },
+          "!down": { "tecla": "Down", "delay": 1000 },
+          "!left": { "tecla": "Left", "delay": 1000 },
+          "!right": { "tecla": "Right", "delay": 1000 }
+        }
+      }
+    };
+
     fs.writeFileSync(
       caminhoComandos,
-      JSON.stringify(comandosPadrao, null, 2)
+      JSON.stringify(padrao, null, 2)
     );
 
     console.log(

@@ -56,7 +56,7 @@ function Controles() {
 
   return (
     <div className='h-screen overflow-y-auto scrollbar-hide pb-18 '>
-      <Presets />
+      <Presets onProfileChange={carregarComandos} />
       <div className='mb-6'>
         <CriarComando criarComando={criarComando} />
       </div>
