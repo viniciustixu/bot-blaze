@@ -3,7 +3,6 @@ const { carregarConfig } = require('./config');
 
 
 function processarFila() {
-  console.log('processarFila');
   const config = carregarConfig();
 
   if (mensagens.length === 0)

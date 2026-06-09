@@ -1,7 +1,7 @@
 const { autoUpdater } = require('electron-updater');
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
-const { start, stop, getStatus, emAquecimento, getFila, getComandoExecutando } = require('../execute');
+const { start, stop, getStatus, getFila, getComandoExecutando } = require('../execute');
 const fs = require('fs');
 const comandosPadrao = require('../commands.json');
 
@@ -82,10 +82,6 @@ ipcMain.handle('bot-toggle', async () => {
 
 ipcMain.handle('bot-status', () => {
   return getStatus();
-});
-
-ipcMain.handle('bot-aquecendo', () => {
-  return emAquecimento();
 });
 
 ipcMain.handle('bot-fila', () => {

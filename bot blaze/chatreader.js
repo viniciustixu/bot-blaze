@@ -4,13 +4,12 @@ const crypto = require('crypto');
 const path = require('path');
 const { loadCommands } = require('./commandsStore');
 const { carregarConfig } = require('./config');
+const { iniciarCache, pararCache, isSubscriber } = require('./src/subscriber-check');
 
 
 const mensagens = [];
 const mensagensLidas = new Set();
 
-
-let inicio = 0;
 
 let browser = null;
 let page = null;
@@ -19,13 +18,16 @@ let interval = null;
 
 async function startChatReader() {
   mensagensLidas.clear();
-
-  console.log('startChatReader');
+  console.log('ChatReader()');
 
   if (browser)
     return;
 
-  inicio = Date.now() + 10000;
+  const config = carregarConfig();
+  console.log('[CONFIG]', JSON.stringify(config));
+
+  const slug = new URL(config.url).pathname.replace(/^\//, '').split('/')[0];
+  iniciarCache(slug);
 
   browser = await chromium.launch({
     headless: true,
@@ -41,10 +43,9 @@ async function startChatReader() {
 
   page = await browser.newPage();
 
-  const config = carregarConfig();
+  const { url } = carregarConfig();
 
-
-  await page.goto(config.url);
+  await page.goto(url);
 
 
   try {
@@ -69,8 +70,14 @@ async function startChatReader() {
     );
   }
 
-  console.log('Chat iniciado...\n');
+  const indicesVisiveis = await page.$$eval(
+    '[data-testid="virtuoso-item-list"] > div',
+    elementos => elementos.map(el => el.getAttribute('data-index')).filter(Boolean)
+  );
 
+  for (const idx of indicesVisiveis) {
+    mensagensLidas.add(idx);
+  }
 
   interval = setInterval(async () => {
 
@@ -124,6 +131,13 @@ async function startChatReader() {
             ) {
               subscriber = 'check';
             }
+            else if (
+              usuarioEl.classList.contains(
+                'text-text-help'
+              )
+            ) {
+              subscriber = false;
+            }
 
 
 
@@ -148,61 +162,17 @@ async function startChatReader() {
         }
       );
 
-      const aquecendo = Date.now() < inicio;
+      const config = carregarConfig();
 
       for (const item of data) {
 
         if (mensagensLidas.has(item.index))
           continue;
 
-        if (aquecendo) {
-
-          mensagensLidas.add(item.index);
-          continue;
+        if (config.submode && item.subscriber !== true) {
+          item.subscriber = isSubscriber(item.usuario);
         }
 
-        if (item.subscriber === 'check') {
-
-          try {
-            const row = page.locator(
-              `[data-index="${item.index}"]`
-            );
-
-            await row.locator(
-              'button[title="User actions"]'
-            ).first().click();
-
-            await page.waitForTimeout(150);
-
-            item.subscriber =
-              await page.getByText(
-                'Subscribed for'
-              ).count() > 0;
-          }
-          catch {
-            item.subscriber = false;
-          }
-        }
-
-
-        const timestamp = Date.now();
-
-        const mensagem = {
-
-          uuid:
-            crypto.randomUUID(),
-
-          timestamp,
-
-          usuario:
-            item.usuario,
-
-          mensagem:
-            item.mensagem,
-
-          subscriber:
-            item.subscriber
-        };
 
         const comandos = loadCommands();
         const comando = comandos[item.mensagem.toLowerCase()];
@@ -215,19 +185,35 @@ async function startChatReader() {
           config.submode &&
           !item.subscriber
         ) {
+          console.log(`[BLOQUEADO] ${item.usuario} -> ${item.mensagem} (nao e sub)`);
           continue;
         }
 
+
+        const mensagem = {
+
+          uuid:
+            crypto.randomUUID(),
+
+          timestamp: Date.now(),
+
+          usuario:
+            item.usuario,
+
+          mensagem:
+            item.mensagem,
+
+          subscriber:
+            item.subscriber
+        };
+
         mensagens.push(mensagem);
 
-        console.log(mensagem);
+
       }
     } catch (err) {
 
-      console.log(
-        'Erro no chat reader:',
-        err
-      );
+      console.error('[CHAT] Erro no loop:', err.message);
 
     }
   }, 1000);
@@ -237,6 +223,7 @@ async function startChatReader() {
 
 async function stopChatReader() {
   mensagensLidas.clear();
+  pararCache();
 
   if (interval) {
 
@@ -256,16 +243,11 @@ async function stopChatReader() {
     browser = null;
   }
 
-  console.log('Chat finalizado');
-}
 
-function emAquecimento() {
-  return Date.now() < inicio;
 }
 
 module.exports = {
   startChatReader,
   stopChatReader,
-  emAquecimento,
   mensagens
 };

@@ -3,7 +3,7 @@
   "author": "Viniciustixu",
   "name": "bot-blaze",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "public/electron.js",
   "scripts": {
     "start": "electron .",
@@ -52,6 +52,7 @@
         "dist/**/*",
         "public/**/*",
         "*.js",
+        "src/**/*.js",
         "commands.json",
         "node_modules/**/*"
       ]

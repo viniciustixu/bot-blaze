@@ -7,21 +7,18 @@ import { useOutletContext } from 'react-router-dom';
 
 function Inicio() {
   const [status, setStatus] = useState('off');
-  const [aquecendo, setAquecendo] = useState(false);
   const [fila, setFila] = useState([]);
   const { setErro } = useOutletContext();
   const [executando, setExecutando] = useState(null);
 
   async function atualizarEstado() {
     const novoStatus = await window.electronAPI.botRodando();
-    const novoAquecimento = await window.electronAPI.botAquecendo();
     const novaFila = await window.electronAPI.botFila();
     const comandoExecutando = await window.electronAPI.botExecutando();
 
     setExecutando(comandoExecutando);
 
     setStatus(novoStatus);
-    setAquecendo(novoAquecimento);
     setFila(novaFila);
   }
 
@@ -50,7 +47,7 @@ function Inicio() {
       <div className='flex justify-around'>
         <div className='flex flex-col justify-evenly'>
           <LogoBot />
-          <StartButton status={status} aquecendo={aquecendo} onClick={iniciarPausarBot} />
+          <StartButton status={status} onClick={iniciarPausarBot} />
         </div>
 
         <ChatDisplay fila={fila} executando={executando} />

@@ -1,6 +1,6 @@
 const { processarFila } = require('./queue');
 const { keyboard, mouse, Button, Key } = require('@nut-tree-fork/nut-js');
-const { mensagens, startChatReader, stopChatReader, emAquecimento } = require('./chatreader');
+const { mensagens, startChatReader, stopChatReader } = require('./chatreader');
 const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
@@ -19,13 +19,14 @@ const mouseMap = {
 
 
 async function start() {
-  console.log('executar');
+  console.log('executar()');
   if (status !== 'off')
     return;
 
   status = 'starting';
 
   mensagens.length = 0;
+  comandoExecutando = null;
 
   try {
     await startChatReader();
@@ -38,7 +39,7 @@ async function start() {
     });
 
     let config2 = carregarConfig();
-    console.log('Bot ON', config2);
+    console.log('BOT ON');
 
   } catch (e) {
     status = 'off';
@@ -57,7 +58,7 @@ async function stop() {
 
   await stopChatReader();
 
-  console.log('Bot OFF');
+  console.log('BOT OFF');
 }
 
 function getStatus() {
@@ -108,7 +109,7 @@ async function executarFila() {
     comandoExecutando = item;
 
     console.log(
-      `[EXECUTANDO] ${item.usuario} -> ${item.mensagem}`
+      `[EXECUTANDO] ${item.usuario} -> ${item.mensagem}, fila: ${mensagens.length}`
     );
     keyboard.config.autoDelayMs = 50;
 
@@ -125,7 +126,7 @@ async function executarFila() {
 
       if (!tecla) {
         console.log(
-          `Tecla inválida: ${comando.tecla}`
+          `[EXECUTANDO] Tecla inválida: ${comando.tecla}`
         );
 
         const index = mensagens.findIndex(
@@ -157,7 +158,7 @@ async function executarFila() {
       mensagens.splice(index, 1);
     }
 
-    console.log("mensagens: ", mensagens.length);
+
   }
 }
 
@@ -175,7 +176,6 @@ function getComandoExecutando() {
 module.exports = {
   start,
   stop,
-  emAquecimento,
   getStatus,
   getFila,
   getComandoExecutando

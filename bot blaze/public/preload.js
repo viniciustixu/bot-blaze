@@ -11,10 +11,6 @@ contextBridge.exposeInMainWorld(
       return ipcRenderer.invoke('bot-status');
     },
 
-    botAquecendo: () => {
-      return ipcRenderer.invoke('bot-aquecendo');
-    },
-
     botFila: () => {
       return ipcRenderer.invoke('bot-fila');
     },
