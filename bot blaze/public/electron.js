@@ -319,36 +319,28 @@ async function verificarAtualizacoes() {
       resolve();
     };
 
-    autoUpdater.on('checking-for-update', () => {
-      log.info('Verificando atualização...');
-    });
-
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       log.warn('Timeout updater');
       done();
-    }, 8000);
-
-    autoUpdater.on('update-available', (info) => {
-      log.info('Update disponível:', info.version);
-    });
+    }, 60000);
 
     autoUpdater.on('update-not-available', () => {
+      clearTimeout(timeout);
       log.info('Nenhuma atualização');
       done();
     });
 
     autoUpdater.on('error', (err) => {
+      clearTimeout(timeout);
       log.error('Erro updater:', err);
       done();
     });
 
     autoUpdater.on('update-downloaded', () => {
-      log.info('Update baixado');
-      done();
+      clearTimeout(timeout);
+      log.info('Update baixado — instalando...');
       autoUpdater.quitAndInstall();
     });
-
-    autoUpdater.autoDownload = true;
 
     autoUpdater.checkForUpdates();
   });
