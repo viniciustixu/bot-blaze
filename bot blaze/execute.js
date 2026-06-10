@@ -115,7 +115,11 @@ async function executarFila() {
 
     if (comando.tecla in mouseMap) {
 
-      await mouse.click(
+      await mouse.pressButton(
+        mouseMap[comando.tecla]
+      );
+      await delay(comando.delay);
+      await mouse.releaseButton(
         mouseMap[comando.tecla]
       );
 
@@ -124,7 +128,7 @@ async function executarFila() {
       const tecla =
         Key[comando.tecla];
 
-      if (!tecla) {
+      if (tecla === undefined) {
         console.log(
           `[EXECUTANDO] Tecla inválida: ${comando.tecla}`
         );

@@ -33,6 +33,7 @@ function CommandCard({ comando, tecla, delay, onDelete, onUpdate }) {
     'Y',
     'Z',
     'Enter',
+    'Escape',
     'Space',
     'Tab',
     'LeftShift',
