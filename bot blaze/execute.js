@@ -1,15 +1,18 @@
 const { processarFila } = require('./queue');
 const { keyboard, mouse, Button, Key } = require('@nut-tree-fork/nut-js');
-const { mensagens, startChatReader, stopChatReader } = require('./chatreader');
+const { mensagens, startChatReader, stopChatReader, getTotalChatMessages, getUniqueUsers, setCounting } = require('./chatreader');
 const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const { loadCommands } = require('./commandsStore');
 const { carregarConfig } = require('./config');
+const { writeLogFile } = require('./logger');
 
 
 let status = 'off';
 let comandoExecutando = null;
+let startTime = null;
+let cmdExecutedCount = 0;
 const mouseMap = {
   'mouse.click(Button.LEFT)': Button.LEFT,
   'mouse.click(Button.RIGHT)': Button.RIGHT,
@@ -27,10 +30,13 @@ async function start() {
 
   mensagens.length = 0;
   comandoExecutando = null;
+  cmdExecutedCount = 0;
 
   try {
     await startChatReader();
 
+    setCounting(true);
+    startTime = Date.now();
     status = 'running';
 
     executarFila().catch(err => {
@@ -54,6 +60,17 @@ async function stop() {
 
   status = 'off';
 
+  if (startTime) {
+    const stats = {
+      cmdExecuted: cmdExecutedCount,
+      totalMessages: getTotalChatMessages(),
+      uniqueUsers: new Set(getUniqueUsers())
+    };
+    await writeLogFile(startTime, stats);
+    startTime = null;
+  }
+
+  setCounting(false);
   mensagens.length = 0;
 
   await stopChatReader();
@@ -150,6 +167,7 @@ async function executarFila() {
     }
     await delay(config.delayEntreTeclas);
 
+    cmdExecutedCount++;
 
 
     comandoExecutando = null;

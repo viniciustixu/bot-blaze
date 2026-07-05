@@ -9,6 +9,9 @@ const { iniciarCache, pararCache, isSubscriber } = require('./src/subscriber-che
 
 const mensagens = [];
 const mensagensLidas = new Set();
+let totalChatMessages = 0;
+let uniqueUsers = new Set();
+let counting = false;
 
 
 let browser = null;
@@ -18,6 +21,8 @@ let interval = null;
 
 async function startChatReader() {
   mensagensLidas.clear();
+  totalChatMessages = 0;
+  uniqueUsers = new Set();
   console.log('ChatReader()');
 
   if (browser)
@@ -169,6 +174,13 @@ async function startChatReader() {
         if (mensagensLidas.has(item.index))
           continue;
 
+        if (counting) {
+          totalChatMessages++;
+          uniqueUsers.add(item.usuario.toLowerCase());
+        }
+
+        mensagensLidas.add(item.index);
+
         if (config.submode && item.subscriber !== true) {
           item.subscriber = isSubscriber(item.usuario);
         }
@@ -178,8 +190,6 @@ async function startChatReader() {
         const comando = comandos[item.mensagem.toLowerCase()];
         if (!comando)
           continue;
-
-        mensagensLidas.add(item.index);
 
         if (
           config.submode &&
@@ -246,8 +256,25 @@ async function stopChatReader() {
 
 }
 
+function getTotalChatMessages() {
+  return totalChatMessages;
+}
+
+function getUniqueUsers() {
+  return uniqueUsers;
+}
+
+function setCounting(enabled) {
+  counting = enabled;
+}
+
 module.exports = {
   startChatReader,
   stopChatReader,
-  mensagens
+  mensagens,
+  totalChatMessages,
+  uniqueUsers,
+  getTotalChatMessages,
+  getUniqueUsers,
+  setCounting
 };

@@ -88,7 +88,11 @@ ipcMain.handle('bot-fila', () => {
   return getFila();
 });
 
-ipcMain.handle('fechar-app', () => {
+ipcMain.handle('fechar-app', async () => {
+  const botStatus = getStatus();
+  if (botStatus === 'running' || botStatus === 'starting') {
+    await stop();
+  }
   app.quit();
 });
 
@@ -270,7 +274,11 @@ app.on('activate', () => {
 
 app.on(
   'window-all-closed',
-  () => {
+  async () => {
+    const botStatus = getStatus();
+    if (botStatus === 'running' || botStatus === 'starting') {
+      await stop();
+    }
 
     if (
       process.platform !== 'darwin'
