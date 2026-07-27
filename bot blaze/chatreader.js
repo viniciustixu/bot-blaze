@@ -1,259 +1,220 @@
-const { app } = require('electron');
-const { chromium } = require('playwright');
-const crypto = require('crypto');
-const path = require('path');
+const { io } = require('socket.io-client');
 const { loadCommands } = require('./commandsStore');
+const { loadChatCommands } = require('./commandsChatStore');
 const { carregarConfig } = require('./config');
 const { iniciarCache, pararCache, isSubscriber } = require('./src/subscriber-check');
+const { garantirToken, resolverSlug, getAccessToken, sendChatMessage } = require('./src/blaze-api');
+const sorteioStore = require('./sorteioStore');
+const credenciais = require('./src/blaze-credentials');
+
+const API_V1 = 'https://api.blaze.stream/v1';
 
 
 const mensagens = [];
-const mensagensLidas = new Set();
+const mensagensVistas = new Set();
 let totalChatMessages = 0;
 let uniqueUsers = new Set();
 let counting = false;
 
 
-let browser = null;
-let page = null;
-let interval = null;
+let socket = null;
+let sessionId = null;
+let channelId = null;
 
 
 async function startChatReader() {
-  mensagensLidas.clear();
+  mensagensVistas.clear();
   totalChatMessages = 0;
   uniqueUsers = new Set();
-  console.log('ChatReader()');
+  console.log('[CHAT] Iniciando leitor via Socket.IO...');
 
-  if (browser)
+  if (socket)
     return;
 
   const config = carregarConfig();
-  console.log('[CONFIG]', JSON.stringify(config));
 
   const slug = new URL(config.url).pathname.replace(/^\//, '').split('/')[0];
   iniciarCache(slug);
 
-  browser = await chromium.launch({
-    headless: true,
-    executablePath: app.isPackaged
-      ? path.join(
-        process.resourcesPath,
-        'chromium',
-        'chrome-win64',
-        'chrome.exe'
-      )
-      : undefined
+  await garantirToken();
+  channelId = await resolverSlug(slug);
+  console.log(`[CHAT] Resolvido channelId: ${channelId}`);
+
+  socket = io('https://blaze.stream', {
+    path: '/ws',
+    transports: ['websocket'],
   });
 
-  page = await browser.newPage();
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Timeout: Socket.IO nao conectou em 15s'));
+    }, 15000);
 
-  const { url } = carregarConfig();
+    socket.on('connect', () => {
+      console.log('[SOCKET] Conectado');
+    });
 
-  await page.goto(url);
+    socket.on('eventsub', async (message) => {
+      const { metadata, payload } = message;
 
+      if (metadata.messageType === 'session_welcome') {
+        sessionId = payload.sessionId;
+        console.log(`[SOCKET] sessionId: ${sessionId}`);
 
-  try {
-
-    await page.waitForSelector(
-      '[data-testid="virtuoso-item-list"] > div',
-      {
-        timeout: 10000
+        try {
+          const tokenAcesso = getAccessToken();
+          const res = await fetch(`${API_V1}/events/subscriptions`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              authorization: `Bearer ${tokenAcesso}`,
+              'client-id': credenciais.clientId,
+            },
+            body: JSON.stringify({
+              type: 'channel.chat.message',
+              version: '1',
+              sessionId,
+              condition: { channelId },
+            }),
+          });
+          if (res.status !== 200) {
+            const data = await res.json();
+            throw new Error(`Falha subscription: ${JSON.stringify(data)}`);
+          }
+          console.log('[EVENTSUB] Subscription ativa para channel.chat.message');
+          clearTimeout(timeout);
+          resolve();
+        } catch (err) {
+          clearTimeout(timeout);
+          reject(err);
+        }
+        return;
       }
-    );
 
-  }
-  catch (e) {
+      if (metadata.subscriptionType !== 'channel.chat.message')
+        return;
 
-    await browser.close();
+      const sender = payload.sender;
+      if (!sender)
+        return;
 
-    browser = null;
-    page = null;
+      const msgId = payload.messageId;
+      if (mensagensVistas.has(msgId))
+        return;
+      mensagensVistas.add(msgId);
 
-    throw new Error(
-      'Erro: não foi possível detectar o chat'
-    );
-  }
+      console.log(`[CHAT] ${sender.displayName}: ${payload.message}`);
 
-  const indicesVisiveis = await page.$$eval(
-    '[data-testid="virtuoso-item-list"] > div',
-    elementos => elementos.map(el => el.getAttribute('data-index')).filter(Boolean)
-  );
+      const comandos = loadCommands();
+      const chatComandos = loadChatCommands();
+      const msgLower = payload.message.toLowerCase().trim();
+      const msgSemPrefixo = msgLower.startsWith('!') ? msgLower.slice(1) : msgLower;
 
-  for (const idx of indicesVisiveis) {
-    mensagensLidas.add(idx);
-  }
-
-  interval = setInterval(async () => {
-
-    try {
-
-      const data = await page.$$eval(
-        '[data-testid="virtuoso-item-list"] > div',
-        elementos => {
-
-          return elementos.map(el => {
-
-            const index =
-              el.getAttribute('data-index');
-
-            const usuarioEl =
-              el.querySelector(
-                'button[title="User actions"]'
-              );
-
-            const mensagemEl =
-              el.querySelector(
-                'span.text-text.pl-1.font-normal'
-              );
-
-            if (!usuarioEl || !mensagemEl)
-              return null;
-
-            let subscriber = false;
-
-            if (
-              usuarioEl.classList.contains(
-                'text-green-400'
-              )
-            ) {
-              subscriber = true;
-            }
-            else if (
-              usuarioEl.classList.contains(
-                'text-red-600'
-              )
-            ) {
-              subscriber = true;
-            }
-            else if (
-              usuarioEl.classList.contains(
-                'text-primary-600'
-              ) ||
-              usuarioEl.className.includes(
-                'ff6600'
-              )
-            ) {
-              subscriber = 'check';
-            }
-            else if (
-              usuarioEl.classList.contains(
-                'text-text-help'
-              )
-            ) {
-              subscriber = false;
-            }
-
-
-
-            return {
-
-              index,
-
-              usuario:
-                usuarioEl.innerText
-                  .replace(':', '')
-                  .trim(),
-
-              mensagem:
-                mensagemEl.innerText
-                  .trim(),
-
-              subscriber
-            };
-
-          }).filter(Boolean);
-
-        }
-      );
-
-      const config = carregarConfig();
-
-      for (const item of data) {
-
-        if (mensagensLidas.has(item.index))
-          continue;
-
-        if (counting) {
-          totalChatMessages++;
-          uniqueUsers.add(item.usuario.toLowerCase());
-        }
-
-        mensagensLidas.add(item.index);
-
-        if (config.submode && item.subscriber !== true) {
-          item.subscriber = isSubscriber(item.usuario);
-        }
-
-
-        const comandos = loadCommands();
-        const comando = comandos[item.mensagem.toLowerCase()];
-        if (!comando)
-          continue;
-
-        if (
-          config.submode &&
-          !item.subscriber
-        ) {
-          console.log(`[BLOQUEADO] ${item.usuario} -> ${item.mensagem} (nao e sub)`);
-          continue;
-        }
-
-
-        const mensagem = {
-
-          uuid:
-            crypto.randomUUID(),
-
-          timestamp: Date.now(),
-
-          usuario:
-            item.usuario,
-
-          mensagem:
-            item.mensagem,
-
-          subscriber:
-            item.subscriber
-        };
-
-        mensagens.push(mensagem);
-
-
+      if (counting) {
+        totalChatMessages++;
+        uniqueUsers.add(sender.username.toLowerCase());
       }
-    } catch (err) {
 
-      console.error('[CHAT] Erro no loop:', err.message);
+      const sorteioCfg = sorteioStore.carregarSorteioConfig();
+      const subscriber = sender.isSubscriber || false;
+      if (sender.id !== credenciais.botUserId) {
+        sorteioStore.registrarInteracao(sender.username, subscriber);
+      }
 
-    }
-  }, 1000);
+      if (msgLower === sorteioCfg.comando || msgSemPrefixo === sorteioCfg.comando.replace('!', '')) {
+        const isMod = (sender.roles && sender.roles.includes('moderator')) || sender.isOwner;
+        if (!isMod) {
+          try {
+            await sendChatMessage(channelId, 'Apenas moderadores podem usar este comando.');
+          } catch (err) {
+            console.error(`[SORTEIO] Erro ao enviar mensagem: ${err.message}`);
+          }
+          return;
+        }
+
+        const vencedor = sorteioStore.sortear();
+        if (!vencedor) {
+          try {
+            await sendChatMessage(channelId, 'Nenhum participante no sorteio.');
+          } catch (err) {
+            console.error(`[SORTEIO] Erro ao enviar mensagem: ${err.message}`);
+          }
+          return;
+        }
+
+        const mensagemFinal = sorteioCfg.mensagem.replace('${user}', `@${vencedor}`);
+        try {
+          await sendChatMessage(channelId, mensagemFinal);
+          console.log(`[SORTEIO] Vencedor: ${vencedor}`);
+        } catch (err) {
+          console.error(`[SORTEIO] Erro ao enviar mensagem: ${err.message}`);
+        }
+
+        sorteioStore.resetarPontos();
+        return;
+      }
+
+      const cfg = carregarConfig();
+
+      let isUserSubscriber = sender.isSubscriber || false;
+
+      if (cfg.submode && !isUserSubscriber) {
+        isUserSubscriber = isSubscriber(sender.username);
+      }
+
+      if (cfg.submode && !isUserSubscriber) {
+        console.log(`[BLOQUEADO] ${sender.displayName} -> ${payload.message} (nao e sub)`);
+        return;
+      }
+
+      const chatComando = chatComandos[msgLower] || chatComandos[msgSemPrefixo];
+      if (chatComando && chatComando.type === 'reply') {
+        try {
+          await sendChatMessage(channelId, chatComando.resposta);
+          console.log(`[REPLY] Resposta enviada para ${sender.displayName}: "${chatComando.resposta}"`);
+        } catch (err) {
+          console.error(`[REPLY] Erro ao enviar resposta: ${err.message}`);
+        }
+        return;
+      }
+
+      const comando = comandos[msgLower] || comandos[msgSemPrefixo];
+      if (!comando)
+        return;
+
+      const mensagem = {
+        uuid: payload.messageId,
+        timestamp: new Date(payload.createdAt).getTime() || Date.now(),
+        usuario: sender.displayName || sender.username,
+        mensagem: payload.message,
+        subscriber: isUserSubscriber,
+      };
+
+      mensagens.push(mensagem);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('[SOCKET] Erro de conexao:', err.message);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[SOCKET] Desconectado:', reason);
+    });
+  });
 }
 
 
-
 async function stopChatReader() {
-  mensagensLidas.clear();
+  mensagensVistas.clear();
   pararCache();
 
-  if (interval) {
-
-    clearInterval(interval);
-    interval = null;
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
 
-  if (page) {
-
-    await page.close();
-    page = null;
-  }
-
-  if (browser) {
-
-    await browser.close();
-    browser = null;
-  }
-
-
+  sessionId = null;
+  channelId = null;
 }
 
 function getTotalChatMessages() {

@@ -24,3 +24,5 @@ chromium/
 *.njsproj
 *.sln
 *.sw?
+../.commandcode/*
+src/.blaze-app-token.json

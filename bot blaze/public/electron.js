@@ -1,9 +1,10 @@
 const { autoUpdater } = require('electron-updater');
 const { app, BrowserWindow, ipcMain } = require('electron/main');
 const path = require('path');
-const { start, stop, getStatus, getFila, getComandoExecutando } = require('../execute');
+const { start, stop, getStatus, getFila, getComandoExecutando, getCmdCount } = require('../execute');
 const fs = require('fs');
 const comandosStore = require('../commandsStore');
+const sorteioStore = require('../sorteioStore');
 
 const log = require('electron-log');
 const configPadrao = {
@@ -50,6 +51,8 @@ const createWindow = () => {
 app.whenReady().then(async () => {
   garantirArquivoComandos();
   garantirArquivoConfig();
+  garantirArquivoCommandsChat();
+  sorteioStore.garantirArquivoSorteio();
 
   createSplash();
 
@@ -82,6 +85,10 @@ ipcMain.handle('bot-toggle', async () => {
 
 ipcMain.handle('bot-status', () => {
   return getStatus();
+});
+
+ipcMain.handle('bot-cmd-count', () => {
+  return getCmdCount();
 });
 
 ipcMain.handle('bot-fila', () => {
@@ -257,6 +264,47 @@ ipcMain.handle('switch-preset', (event, name) => {
 });
 
 // =====================
+// Chat Commands (reply)
+
+const commandsChatStore = require('../commandsChatStore');
+
+ipcMain.handle('get-chat-commands', () => {
+  garantirArquivoCommandsChat();
+  return commandsChatStore.loadChatCommands();
+});
+
+ipcMain.handle('create-chat-command', (event, data) => {
+  garantirArquivoCommandsChat();
+  const { comando, resposta } = data;
+  if (!comando || !resposta) return { erro: 'Preencha todos os campos' };
+  return commandsChatStore.createChatCommand(comando, resposta);
+});
+
+ipcMain.handle('delete-chat-command', (event, key) => {
+  garantirArquivoCommandsChat();
+  commandsChatStore.deleteChatCommand(key);
+  return { ok: true };
+});
+
+ipcMain.handle('update-chat-command', (event, oldKey, data) => {
+  garantirArquivoCommandsChat();
+  commandsChatStore.updateChatCommand(oldKey, data.comando, data.resposta);
+  return { ok: true };
+});
+
+// =====================
+// Sorteio Config
+
+ipcMain.handle('get-sorteio-config', () => {
+  return sorteioStore.carregarSorteioConfig();
+});
+
+ipcMain.handle('save-sorteio-config', (event, config) => {
+  sorteioStore.salvarSorteioConfig(config);
+  return true;
+});
+
+// =====================
 
 
 
@@ -345,6 +393,40 @@ function garantirArquivoConfig() {
   }
 
   return caminhoConfig;
+}
+
+function garantirArquivoCommandsChat() {
+  const pastaUsuario = app.getPath('userData');
+
+  const caminho = path.join(
+    pastaUsuario,
+    'commandschat.json'
+  );
+
+  if (!fs.existsSync(caminho)) {
+    const padrao = {
+      "howtoplay": {
+        "type": "reply",
+        "resposta": "Envie up, down, left ou right para se mover. Derrote inimigos para ganhar pontos!"
+      },
+      "commands": {
+        "type": "reply",
+        "resposta": "Comandos disponiveis: up, down, left, right, l, r, b, a, howtoplay, commands"
+      }
+    };
+
+    fs.writeFileSync(
+      caminho,
+      JSON.stringify(padrao, null, 2)
+    );
+
+    console.log(
+      'commandschat.json criado em:',
+      caminho
+    );
+  }
+
+  return caminho;
 }
 
 async function verificarAtualizacoes() {

@@ -53,6 +53,9 @@ contextBridge.exposeInMainWorld(
     botExecutando: () => {
       return ipcRenderer.invoke('bot-executando');
     },
+    botCmdCount: () => {
+      return ipcRenderer.invoke('bot-cmd-count');
+    },
     appVersion: () => {
       return ipcRenderer.invoke('app-version');
     },
@@ -67,6 +70,24 @@ contextBridge.exposeInMainWorld(
     },
     switchPreset: (name) => {
       return ipcRenderer.invoke('switch-preset', name);
+    },
+    getChatCommands: () => {
+      return ipcRenderer.invoke('get-chat-commands');
+    },
+    createChatCommand: (data) => {
+      return ipcRenderer.invoke('create-chat-command', data);
+    },
+    deleteChatCommand: (key) => {
+      return ipcRenderer.invoke('delete-chat-command', key);
+    },
+    updateChatCommand: (oldKey, data) => {
+      return ipcRenderer.invoke('update-chat-command', oldKey, data);
+    },
+    getSorteioConfig: () => {
+      return ipcRenderer.invoke('get-sorteio-config');
+    },
+    saveSorteioConfig: (config) => {
+      return ipcRenderer.invoke('save-sorteio-config', config);
     }
   }
 );

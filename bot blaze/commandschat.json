@@ -1,0 +1,10 @@
+{
+  "howtoplay": {
+    "type": "reply",
+    "resposta": "Envie up, down, left ou right para se mover. Derrote inimigos para ganhar pontos!"
+  },
+  "commands": {
+    "type": "reply",
+    "resposta": "Comandos disponiveis: up, down, left, right, l, r, b, a, howtoplay, commands"
+  }
+}

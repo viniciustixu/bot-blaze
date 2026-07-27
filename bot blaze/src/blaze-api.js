@@ -1,6 +1,5 @@
 const path = require("path");
 const fs = require("fs");
-const { app } = require("electron");
 const credenciais = require("./blaze-credentials");
 
 const API_AUTH = "https://blaze.stream";
@@ -11,8 +10,20 @@ let channelId = null;
 let cacheInterval = null;
 const subsCache = new Set();
 
+function tryRequireElectron() {
+  try {
+    return require("electron");
+  } catch {
+    return null;
+  }
+}
+
 function getTokenPath() {
-  return path.join(app.getPath("userData"), "blaze-app-token.json");
+  const electron = tryRequireElectron();
+  if (electron && electron.app) {
+    return path.join(electron.app.getPath("userData"), "blaze-app-token.json");
+  }
+  return path.join(__dirname, ".blaze-app-token.json");
 }
 
 function carregarToken() {
@@ -25,7 +36,9 @@ function carregarToken() {
 
 function salvarToken(dados) {
   token = dados;
-  fs.writeFileSync(getTokenPath(), JSON.stringify(token, null, 2));
+  try {
+    fs.writeFileSync(getTokenPath(), JSON.stringify(token, null, 2));
+  } catch {}
 }
 
 async function apiGet(path) {
@@ -55,6 +68,7 @@ async function gerarAppToken() {
 }
 
 async function garantirToken() {
+  if (token && Date.now() < token.expiresAt) return;
   const salvo = carregarToken();
   if (salvo && Date.now() < salvo.expiresAt) {
     token = salvo;
@@ -117,4 +131,31 @@ function isSubscriber(nomeUsuario) {
   return subsCache.has(nomeUsuario.toLowerCase());
 }
 
-module.exports = { iniciarCache, pararCache, isSubscriber, garantirToken, resolverSlug, apiGet };
+function getAccessToken() {
+  return token ? token.accessToken : null;
+}
+
+async function sendChatMessage(channelId, message) {
+  await garantirToken();
+  const res = await fetch(`${API_V1}/chats/messages`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token.accessToken}`,
+      "client-id": credenciais.clientId,
+    },
+    body: JSON.stringify({
+      channelId,
+      message,
+      senderId: credenciais.botUserId,
+    }),
+  });
+  const data = await res.json();
+  if (res.status !== 200) {
+    console.error(`[SEND] Falha ao enviar mensagem: ${JSON.stringify(data)}`);
+    return;
+  }
+  console.log(`[SEND] Mensagem enviada: "${message.substring(0, 50)}"`);
+}
+
+module.exports = { iniciarCache, pararCache, isSubscriber, garantirToken, resolverSlug, apiGet, getAccessToken, sendChatMessage };

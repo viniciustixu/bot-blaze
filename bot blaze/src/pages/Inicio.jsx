@@ -10,14 +10,16 @@ function Inicio() {
   const [fila, setFila] = useState([]);
   const { setErro } = useOutletContext();
   const [executando, setExecutando] = useState(null);
+  const [cmdCount, setCmdCount] = useState(0);
 
   async function atualizarEstado() {
     const novoStatus = await window.electronAPI.botRodando();
     const novaFila = await window.electronAPI.botFila();
     const comandoExecutando = await window.electronAPI.botExecutando();
+    const count = await window.electronAPI.botCmdCount();
 
     setExecutando(comandoExecutando);
-
+    setCmdCount(count);
     setStatus(novoStatus);
     setFila(novaFila);
   }
@@ -50,7 +52,10 @@ function Inicio() {
           <StartButton status={status} onClick={iniciarPausarBot} />
         </div>
 
-        <ChatDisplay fila={fila} executando={executando} />
+        <div className='relative'>
+          <span className='absolute top-0 left-1/2 -translate-x-1/2 text-[rgb(255,20,255)] text-lg font-atkinsonb font-bold z-10 whitespace-nowrap'>{cmdCount}</span>
+          <ChatDisplay fila={fila} executando={executando} />
+        </div>
       </div>
     </div>
   );

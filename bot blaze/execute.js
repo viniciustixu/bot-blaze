@@ -70,6 +70,8 @@ async function stop() {
     startTime = null;
   }
 
+  cmdExecutedCount = 0;
+
   setCounting(false);
   mensagens.length = 0;
 
@@ -195,10 +197,15 @@ function getComandoExecutando() {
   return comandoExecutando;
 }
 
+function getCmdCount() {
+  return cmdExecutedCount;
+}
+
 module.exports = {
   start,
   stop,
   getStatus,
   getFila,
-  getComandoExecutando
+  getComandoExecutando,
+  getCmdCount
 };
